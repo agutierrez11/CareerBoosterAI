@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+requests
+pdfminer.high_level
+python-multipart
+# Add other dependencies as needed
