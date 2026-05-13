@@ -134,17 +134,18 @@ export default function JobRadar() {
         <h2 className="text-lg font-bold text-slate-400 mb-4 uppercase tracking-widest text-xs">🔗 Fuentes de Búsqueda Directa</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { name: "RemoteJobsFinder", emoji: "🌐", url: "https://remotejobsfinder.co/en?country=USA&query=fintech+sales+manager" },
-            { name: "LinkedIn Jobs", emoji: "💼", url: "https://www.linkedin.com/jobs/search/?keywords=fintech%20sales%20manager%20LATAM&location=Mexico" },
-            { name: "Remotive", emoji: "🛸", url: "https://remotive.com/remote-jobs/sales/fintech" },
-            { name: "JobLeads", emoji: "🎯", url: "https://www.jobleads.com/search/jobs?view=for-you" },
+            { name: "RemoteJobsFinder", emoji: "🌐", url: "https://remotejobsfinder.co/en?country=USA&query=fintech+sales+manager", tip: "300k+ vacantes remotas" },
+            { name: "LinkedIn Jobs", emoji: "💼", url: "https://www.linkedin.com/jobs/search/?keywords=fintech%20sales%20director%20LATAM&location=Mexico&f_E=4%2C5%2C6", tip: "Roles Senior / Director+" },
+            { name: "JobLeads", emoji: "🎯", url: "https://www.jobleads.com/search/jobs?q=sales+director+fintech&l=mexico&salary=100000", tip: "Roles $100k+ USD" },
+            { name: "Remotive", emoji: "🛸", url: "https://remotive.com/remote-jobs/sales/fintech", tip: "Fintech remoto global" },
+            { name: "Glassdoor", emoji: "🔮", url: "https://www.glassdoor.com/Job/jobs.htm?sc.keyword=fintech+sales+director&locT=N&locId=1&jl=100000&seniority=DIRECTOR", tip: "Salarios + Reviews" },
           ].map((src, i) => (
             <a key={i} href={src.url} target="_blank" rel="noreferrer"
               className="flex items-center gap-3 bg-[#11151f] border border-white/5 hover:border-sky-500/40 p-4 rounded-2xl transition-all group">
               <span className="text-2xl">{src.emoji}</span>
               <div>
                 <div className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">{src.name}</div>
-                <div className="text-xs text-slate-600">Búsqueda directa →</div>
+                <div className="text-xs text-slate-500">{src.tip}</div>
               </div>
             </a>
           ))}
