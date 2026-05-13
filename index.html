@@ -335,28 +335,40 @@ async function scanLive(){
   btn.disabled=true;
   icon.className="spin";
   icon.textContent="⏳";
-  document.getElementById("statSource").textContent="⏳ Escaneando...";
+  document.getElementById("statSource").textContent="🛰️ Escaneando ecosistema LATAM...";
 
   try{
-    const queries=["fintech sales manager latam","payments director mexico remote","antifraude crossborder fintech latam"];
+    // Queries optimizadas para tu perfil
+    const queries=[
+      "fintech sales manager mexico",
+      "payments director latam",
+      "antifraude",
+      "risk manager payments",
+      "account executive fintech"
+    ];
+    
+    // Llamada paralela a la API de Remotive (Punto de partida)
     const results=await Promise.allSettled(queries.map(q=>
-      fetch(`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(q)}&limit=12`).then(r=>r.json())
+      fetch(`https://remotive.io/api/remote-jobs?search=${encodeURIComponent(q)}&limit=15`).then(r=>r.json())
     ));
+
     const fresh=[];
     const existingUrls=new Set(SEED.map(j=>j.url));
+    
     results.forEach(r=>{
       if(r.status==="fulfilled"&&r.value.jobs){
         r.value.jobs.forEach(j=>{
           if(!existingUrls.has(j.url)){
-            existingUrls.add(j.url);
             fresh.push({
               company:j.company_name,
               title:j.title,
               url:j.url,
-              location:j.candidate_required_location||"Remote",
-              tags:(j.tags||[]).slice(0,3),
-              source:"api"
+              location:j.candidate_required_location || "Remote",
+              tags:j.tags || [],
+              source:"api",
+              posted: "Recién detectada"
             });
+            existingUrls.add(j.url);
           }
         });
       }
