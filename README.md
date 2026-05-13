@@ -1,45 +1,16 @@
-# 🛰️ Job Radar 2026: Career Intelligence Platform
+# React + Vite
 
-High-performance career intelligence platform designed for strategic GTM and Fintech executive roles. This system automates the job hunting process using a swarm of AI agents and professional-grade web harvesting.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 🚀 Core Intelligence Suite
+Currently, two official plugins are available:
 
-- **Dual-Engine Search:** Simultaneously scans the market using the **Remotive API** (Remote-first) and **Google Strategic Search** via **Scrape.do**, bypassing anti-bot measures to find vacancies on LinkedIn, Indeed, and direct company boards.
-- **DeepSeek AI Brain:** Uses DeepSeek-V3 for CV-to-Vacancy matching and tactical rewriting, ensuring high-impact applications with minimum effort.
-- **Telegram Sentinel:** Automated real-time alerts sent directly to your phone for "Elite Matches" (Score > 8/10).
-- **Daily Autonomous Scan:** A GitHub Action triggers a full market sweep every day at 8:00 AM CDMX, updating the vacancy database and deploying changes to production.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## 🛠️ Technology Stack
+## React Compiler
 
-- **Frontend:** React + TailwindCSS (Tactical Glassmorphism UI).
-- **Backend:** FastAPI (Serverless ready).
-- **Deployment:** Vercel (Unified Monorepo).
-- **Automation:** GitHub Actions.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## 📋 Environment Variables (Vercel)
+## Expanding the ESLint configuration
 
-To run this platform, the following secrets must be configured in Vercel:
-
-| Variable | Description |
-| --- | --- |
-| `DEEPSEEK_API_KEY` | Primary AI engine for matching and optimization. |
-| `SCRAPE_DO_TOKEN` | Token for professional Google/LinkedIn harvesting. |
-| `TELEGRAM_BOT_TOKEN` | Token from @BotFather for alerts. |
-| `TELEGRAM_CHAT_ID` | Your personal ID from @userinfobot. |
-
-## 📦 Project Structure
-
-- `/backend`: Python logic, radar engine, and AI optimizers.
-- `/frontend`: React dashboard and tactical UI.
-- `/.github/workflows`: Daily automation scripts.
-- `active_vacancies.json`: The living database of verified opportunities.
-
-## 🛡️ Setup & Deployment
-
-1. Connect this repo to **Vercel**.
-2. Add the Environment Variables listed above.
-3. Deploy.
-4. The system will start fetching and alerting immediately.
-
----
-*Developed for Antonio Gutierrez - Strategic GTM Intelligence.*
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
