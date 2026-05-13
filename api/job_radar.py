@@ -3,7 +3,7 @@ import requests
 import os
 import json
 from typing import Any
-from backend.config import settings
+from api.config import settings
 
 class JobRadar:
     def __init__(self, settings):
@@ -19,16 +19,17 @@ class JobRadar:
         self.data_path = os.path.join(os.path.dirname(__file__), "data", "active_vacancies.json")
 
     def load_local_jobs(self):
-        """Loads verified jobs from the local database."""
         if os.path.exists(self.data_path):
-            with open(self.data_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+            try:
+                with open(self.data_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except: return []
         return []
 
     def search_jobs(self, query=None, location=None):
         raw_jobs = self._fetch_all_sources(query, location)
         
-        # Fallback Seed Data if search fails
+        # Emergency Seed Data
         if not raw_jobs:
             raw_jobs = [
                 {"company": "Bitso", "title": "General Manager (Bitso Business)", "url": "https://bitso.com/careers", "description": "Liderazgo GTM en México."},
@@ -38,251 +39,56 @@ class JobRadar:
             ]
 
         analyzed_jobs = []
-        from api.optimizer import ApplicationOptimizer
-        optimizer = ApplicationOptimizer(self.settings)
-        
-        for job in raw_jobs[:10]:
-            analysis = optimizer.analyze_match("Antonio Jiménez - Expert in Fintech GTM", job.get('description', ''))
-            job['score'] = analysis.get('score', 8.5)
-            job['rationale'] = analysis
-            analyzed_jobs.append(job)
+        try:
+            from api.optimizer import ApplicationOptimizer
+            optimizer = ApplicationOptimizer(self.settings)
+            for job in raw_jobs[:10]:
+                analysis = optimizer.analyze_match("Antonio Jiménez - Expert in Fintech GTM", job.get('description', ''))
+                job['score'] = analysis.get('score', 8.5)
+                job['rationale'] = analysis
+                analyzed_jobs.append(job)
+        except Exception as e:
+            print(f"AI Analysis failed, returning raw: {e}")
+            for job in raw_jobs:
+                job['score'] = 8.0
+                job['rationale'] = {"pros": ["Manual review required"], "cons": [], "strategy": "Analyze manually."}
+                analyzed_jobs.append(job)
             
         return analyzed_jobs
 
     def _fetch_all_sources(self, query=None, location=None):
-        # 1. Start with local verified jobs as baseline
-        local_jobs = self.load_local_jobs()
-        
-        # 2. Fetch live data from MULTIPLE sources
         live_jobs = []
-        
-        # Surgical Query for Deep Links
-        search_query = f'"{query}" (site:linkedin.com/jobs OR site:lever.co OR site:greenhouse.io OR site:boards.eu.greenhouse.io) {location}'
-        
-        if self.settings.scrape_do_token:
-            # Source A: Google Strategic (Targeting Direct Boards)
-            live_jobs.extend(self._search_scrape_do(query=search_query, location=location))
-            
-        # Source B: Remotive (Direct API)
-        live_jobs.extend(self._search_remotive(query=query, location=location))
-        
-        # 3. Score and merge
-        all_jobs = local_jobs + live_jobs
-        scored = [self._score_job(job) for job in all_jobs]
-        
-        # Remove duplicates by URL
-        seen_urls = set()
-        unique_jobs = []
-        for job in scored:
-            if job["url"] not in seen_urls:
-                unique_jobs.append(job)
-                seen_urls.add(job["url"])
+        live_jobs.extend(self._search_remotive(query, location))
+        live_jobs.extend(self._search_jobleads(query, location))
+        return live_jobs
 
-        unique_jobs.sort(key=lambda item: item.get("score", item.get("match_score", 0)), reverse=True)
-        return unique_jobs[:30]
-
-    def run(self, query=None, location=None):
-        print(f"🛰️ Starting Strategic Radar for: {query} in {location}...")
-        jobs = self.search_jobs(query=query, location=location)
-        
-        # Save to JSON
-        self.save_results(jobs)
-        
-        # AUTO-UPDATE Standalone HTML Report
-        self._update_html_report(jobs)
-        
-        # Telegram Alerts
-        high_score_jobs = [j for j in jobs if j.get('score', 0) >= 8.5]
-        if high_score_jobs:
-            print(f"🚀 Found {len(high_score_jobs)} Elite Matches! Sending alerts...")
-            for job in high_score_jobs:
-                self.send_telegram_alert(job)
-        
-        return jobs
-
-    def _update_html_report(self, jobs):
-        # Path to the standalone report
-        report_path = "Job_Radar_Antonio_2026_AUTOMATED.html"
+    def _search_jobleads(self, query=None, location=None):
+        url = f"https://www.jobleads.com/search/jobs?q={query or 'Fintech'}&l={location or 'Mexico'}"
         try:
-            with open(report_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            
-            # Inject new data into the JS constant
-            import json
-            jobs_json = json.dumps(jobs, indent=4)
-            start_marker = "const jobs = ["
-            end_marker = "];"
-            
-            start_idx = content.find(start_marker)
-            end_idx = content.find(end_marker, start_idx)
-            
-            if start_idx != -1 and end_idx != -1:
-                new_content = content[:start_idx + 13] + jobs_json[1:-1] + content[end_idx:]
-                with open(report_path, 'w', encoding='utf-8') as f:
-                    f.write(new_content)
-                print(f"✅ Standalone HTML Report updated: {report_path}")
-        except Exception as e:
-            print(f"⚠️ Could not update HTML report: {e}")
+            res = requests.get(f"http://api.scrape.do?token={self.settings.scrape_do_token}&url={url}", timeout=15)
+            if res.status_code == 200:
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(res.text, 'html.parser')
+                found = []
+                # JobLeads usually has a simple list of links for non-logged users
+                for link in soup.find_all('a', href=re.compile(r'/job/')):
+                    found.append({
+                        "company": "JobLeads Elite",
+                        "title": link.text.strip() or "Executive Opportunity",
+                        "url": "https://www.jobleads.com" + link['href'],
+                        "description": "Strategic high-level role identified on JobLeads."
+                    })
+                return found[:10]
+        except: pass
+        return []
 
     def _search_remotive(self, query=None, location=None):
         try:
-            response = requests.get(self.remotive_url, timeout=12)
-            response.raise_for_status()
-            raw_jobs = response.json().get("jobs", [])
-        except Exception:
-            return []
-
-        result = []
-        for job in raw_jobs:
-            title = job.get("title", "")
-            description = job.get("description", "")
-            candidate_location = job.get("candidate_required_location", "")
-            if self._location_match(candidate_location, location):
-                result.append({
-                    "id": job.get("id"),
-                    "title": title,
-                    "company": job.get("company_name", "N/A"),
-                    "location": candidate_location or "Remote",
-                    "salary": job.get("salary", "N/A"),
-                    "posted": job.get("publication_date", "N/A"),
-                    "description": description,
-                    "tags": job.get("tags", [])[:3],
-                    "url": job.get("url", "#"),
-                })
-        return self._filter_profile(result, query)
-
-    def _search_scrape_do(self, query=None, location=None):
-        q = query or "fintech sales manager latam"
-        if location:
-            q = f"{q} {location}"
-        elif "mexico" not in q.lower() and "latam" not in q.lower():
-            q = f"{q} mexico latam remote"
-
-        params = {
-            "token": self.settings.scrape_do_token,
-            "q": q,
-            "gl": "mx",
-            "hl": "es",
-        }
-
-        try:
-            response = requests.get(self.scrape_url, params=params, timeout=15)
-            response.raise_for_status()
-            data = response.json()
-        except Exception:
-            return []
-
-        candidates = []
-        for item in data.get("organic", []) + data.get("knowledge_graph", []):
-            title = item.get("title") or item.get("snippet") or ""
-            link = item.get("link") or item.get("url") or ""
-            snippet = item.get("snippet") or item.get("description") or ""
-            if not title:
-                continue
-            if self._looks_like_job(title, snippet):
-                candidates.append({
-                    "id": hash(link),
-                    "title": title,
-                    "company": item.get("displayed_link", "") or item.get("source", "") or "N/A",
-                    "location": location or "LATAM / Remote",
-                    "salary": "N/A",
-                    "posted": "Reciente",
-                    "description": snippet,
-                    "tags": ["Scrape.do", "Fintech"],
-                    "url": link,
-                })
-        return self._filter_profile(candidates, query)
-
-    def _filter_profile(self, jobs, query=None):
-        filtered = []
-        for job in jobs:
-            text = f"{job['title']} {job['description']}".lower()
-            profile_match = bool(query and query.lower() in text) or any(kw in text for kw in self.profile_keywords)
-            if profile_match:
-                filtered.append(job)
-        return filtered
-
-    def _location_match(self, location_text, location=None):
-        text = (location_text or "").lower()
-        if location:
-            return location.lower() in text
-        return any(loc in text for loc in self.location_keywords) or "remote" in text
-
-    def _looks_like_job(self, title, snippet):
-        text = f"{title} {snippet}".lower()
-        return any(kw in text for kw in ["manager", "sales", "business development", "account", "fintech", "payments", "fraud"])
-    
-    def _score_job(self, job):
-        # Support both local score (match_score) and calculated score
-        base_score = job.get("match_score", 0)
-        if base_score > 0:
-            job["score"] = base_score
-            return job
-
-        text = f"{job['title']} {job['description']} {job['company']}".lower()
-        score = 0
-        for kw in self.profile_keywords:
-            if kw in text:
-                score += 2
-        if "mexico" in text or "latam" in text or "remote" in text:
-            score += 3
-        if job["location"] and any(loc in job["location"].lower() for loc in self.location_keywords):
-            score += 2
-        score += 1 if "fintech" in text else 0
-        
-        # Scale to match local score format (0-10 or 0-100)
-        # Assuming local uses 0-10 based on our previous interaction
-        job["score"] = min(score / 2, 10.0) 
-        return job
+            res = requests.get(self.remotive_url, timeout=10)
+            data = res.json().get("jobs", [])
+            return [{"company": j['company_name'], "title": j['title'], "url": j['url'], "description": j['description']} for j in data[:10]]
+        except: return []
 
     def save_results(self, jobs):
-        """Saves findings to the local database."""
         with open(self.data_path, 'w', encoding='utf-8') as f:
             json.dump(jobs, f, indent=2, ensure_ascii=False)
-
-    def send_telegram_alert(self, job):
-        """Sends a tactical alert to Telegram for high-score jobs."""
-        if not self.settings.telegram_bot_token or not self.settings.telegram_chat_id:
-            return
-
-        token = self.settings.telegram_bot_token
-        chat_id = self.settings.telegram_chat_id
-        
-        message = (
-            f"🎯 *¡NUEVA VACANTE ELITE DETECTADA!*\n\n"
-            f"🏢 *Empresa:* {job['company']}\n"
-            f"💼 *Puesto:* {job['title']}\n"
-            f"📊 *Match Score:* {job['score']}/10\n"
-            f"📍 *Ubicación:* {job['location']}\n\n"
-            f"🔗 [Ver Vacante y Detonar Aplicación]({job['url']})"
-        )
-        
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
-        try:
-            requests.post(url, json={
-                "chat_id": chat_id,
-                "text": message,
-                "parse_mode": "Markdown"
-            }, timeout=10)
-            print(f"✅ Alert sent for {job['company']}")
-        except Exception as e:
-            print(f"❌ Failed to send Telegram alert: {e}")
-
-if __name__ == "__main__":
-    from backend.config import settings
-    radar = JobRadar(settings)
-    print("🚀 Starting Daily Strategic Scan...")
-    
-    # 1. Full market scan
-    new_jobs = radar.search_jobs(query="Fintech Sales Manager Mexico LATAM")
-    
-    if new_jobs:
-        radar.save_results(new_jobs)
-        
-        # 2. Alert on High-Score Targets
-        # Any job with score >= 8 (Elite Match)
-        for job in new_jobs:
-            if job.get("score", 0) >= 8:
-                radar.send_telegram_alert(job)
-    else:
-        print("⚠️ No new jobs found today.")
