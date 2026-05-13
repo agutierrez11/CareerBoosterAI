@@ -50,20 +50,30 @@ const getAnalysis = (job) => {
   return { pros: pros.slice(0, 3), cons: cons.slice(0, 2), strategy };
 };
 
-// ── Vacantes reales de LinkedIn — Curadas para el perfil de Antonio ───────
+// ── Vacantes VERIFICADAS — Links directos LinkedIn ────────────────────────
+// Última verificación: Mayo 2026 | ✅ = Activa | ❌ = Eliminada
 const LINKEDIN_SEED = [
+  // ── LIDERAZGO REGIONAL ──────────────────────────────────────────────────
   { company: "Taptap Send", title: "General Manager, LATAM", url: "https://www.linkedin.com/jobs/view/4242002934/", location: "Remote / LATAM", tags: ["General Manager", "LATAM", "Fintech"] },
-  { company: "VelaFi", title: "Regional Head of Sales – LATAM", url: "https://linkedin.com/jobs/view/4370000287/", location: "Remote / LATAM", tags: ["Head of Sales", "LATAM", "Payments"] },
+  { company: "VelaFi", title: "Regional Head of Sales – LATAM", url: "https://www.linkedin.com/jobs/view/4370000287/", location: "Remote / LATAM", tags: ["Head of Sales", "LATAM", "Payments"] },
   { company: "Limited, Inc.", title: "Head of Sales — LATAM", url: "https://www.linkedin.com/jobs/view/4366888537/", location: "Remote / LATAM", tags: ["Head of Sales", "Fintech", "LATAM"] },
-  { company: "Binance", title: "Business Development - Payment (LATAM)", url: "https://www.linkedin.com/jobs/view/4330738587/", location: "Remote / LATAM", tags: ["BD", "Payments", "LATAM", "Crypto"] },
-  { company: "Rapyd", title: "Payment Methods Leader", url: "https://www.linkedin.com/jobs/view/4379956200/", location: "Remote", tags: ["Payments", "Leadership", "Fintech"] },
-  { company: "OKX", title: "Growth Manager", url: "https://linkedin.com/jobs/view/4379499288/", location: "Remote / Mexico", tags: ["Growth", "Crypto", "Fintech"] },
-  { company: "Solana Foundation", title: "Country Manager, Mexico – Crypto Card", url: "https://www.linkedin.com/jobs/view/4379547360/", location: "Mexico (Remote)", tags: ["Country Manager", "Crypto", "Mexico"] },
-  { company: "Tether.io", title: "Expansion Manager - Mexico (100% Remote)", url: "https://linkedin.com/jobs/view/4338949598/", location: "Mexico (Remote)", tags: ["Expansion", "Crypto", "Mexico", "Remote"] },
-  { company: "Nuvei", title: "Sr. Account Manager – Mexico", url: "https://www.linkedin.com/jobs/view/4279700652/", location: "Mexico", tags: ["Account Manager", "Payments", "Fintech"] },
+
+  // ── PAGOS & FINTECH ─────────────────────────────────────────────────────
+  { company: "Binance", title: "Business Development – Payment (LATAM)", url: "https://www.linkedin.com/jobs/view/4330738587/", location: "Remote / LATAM", tags: ["BD", "Payments", "LATAM", "Crypto"] },
+  { company: "DEUNA", title: "Enterprise Sales Executive – Payments (Remote MX)", url: "https://www.linkedin.com/jobs/view/4361105504/", location: "Ciudad de México (Remote)", tags: ["Enterprise Sales", "Payments", "Fintech", "Remote"] },
+  { company: "Nuvei", title: "Sr. Account Manager – Mexico", url: "https://www.linkedin.com/jobs/view/4279700652/", location: "México", tags: ["Account Manager", "Payments", "Fintech"] },
+  { company: "Nuvei", title: "Business Development Manager – LATAM Gaming", url: "https://www.linkedin.com/jobs/view/4303639210/", location: "Remote / LATAM", tags: ["BD", "Payments", "LATAM", "Gaming"] },
+
+  // ── ANTIFRAUDE & RIESGO ─────────────────────────────────────────────────
   { company: "Koin", title: "Sales Executive Senior – Anti Fraud Solutions", url: "https://www.linkedin.com/jobs/view/4363999558/", location: "LATAM", tags: ["Anti-fraud", "Sales", "Fintech"] },
-  { company: "Bitso", title: "Prime Sales & Trading Manager", url: "https://www.linkedin.com/jobs/view/4366984630/", location: "Mexico / Remote", tags: ["Sales", "Crypto", "Fintech"] },
-  { company: "Varicent", title: "GTM Enablement Specialist (Remote – Mexico)", url: "https://www.linkedin.com/jobs/view/4366420024/", location: "Mexico (Remote)", tags: ["GTM", "Enablement", "Revenue", "Remote"] },
+  { company: "Signifyd", title: "Principal, Strategic Accounts & Insights", url: "https://www.linkedin.com/jobs/view/4369240699/", location: "Remote / LATAM", tags: ["Anti-fraud", "Strategic Accounts", "Fintech"] },
+
+  // ── CRYPTO & GROWTH ─────────────────────────────────────────────────────
+  { company: "OKX", title: "Growth Manager", url: "https://www.linkedin.com/jobs/view/4379499288/", location: "Remote / México", tags: ["Growth", "Crypto", "Fintech"] },
+  { company: "Bitso", title: "Prime Sales & Trading Manager", url: "https://www.linkedin.com/jobs/view/4366984630/", location: "México / Remote", tags: ["Sales", "Crypto", "Fintech"] },
+
+  // ── GTM & ENABLEMENT ────────────────────────────────────────────────────
+  { company: "Varicent", title: "GTM Enablement Specialist (Remote – México Only)", url: "https://www.linkedin.com/jobs/view/4366420024/", location: "México (Remote)", tags: ["GTM", "Enablement", "Revenue", "Remote"] },
 ];
 
 export default function JobRadar() {
