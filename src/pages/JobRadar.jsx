@@ -50,15 +50,16 @@ const getAnalysis = (job) => {
   return { pros: pros.slice(0, 3), cons: cons.slice(0, 2), strategy };
 };
 
-// ── Vacantes VERIFICADAS — Links directos LinkedIn ────────────────────────
-// Última verificación: Mayo 2026 | ✅ = Activa | ❌ = Eliminada
+// ── Vacantes VERIFICADAS — Links directos LinkedIn / Amazon ───────────────
+// Última verificación: 13 Mayo 2026
 const LINKEDIN_SEED = [
   // ── LIDERAZGO REGIONAL ──────────────────────────────────────────────────
   { company: "Taptap Send", title: "General Manager, LATAM", url: "https://www.linkedin.com/jobs/view/4242002934/", location: "Remote / LATAM", tags: ["General Manager", "LATAM", "Fintech"] },
   { company: "VelaFi", title: "Regional Head of Sales – LATAM", url: "https://www.linkedin.com/jobs/view/4370000287/", location: "Remote / LATAM", tags: ["Head of Sales", "LATAM", "Payments"] },
   { company: "Limited, Inc.", title: "Head of Sales — LATAM", url: "https://www.linkedin.com/jobs/view/4366888537/", location: "Remote / LATAM", tags: ["Head of Sales", "Fintech", "LATAM"] },
 
-  // ── PAGOS & FINTECH ─────────────────────────────────────────────────────
+  // ── PAGOS & PARTNERSHIPS ────────────────────────────────────────────────
+  { company: "Amazon", title: "Sr. Partner Manager, Payments – LATAM", url: "https://amazon.jobs/en/jobs/10413517", location: "Ciudad de México", tags: ["Payments", "Partnerships", "LATAM", "Amazon"] },
   { company: "Binance", title: "Business Development – Payment (LATAM)", url: "https://www.linkedin.com/jobs/view/4330738587/", location: "Remote / LATAM", tags: ["BD", "Payments", "LATAM", "Crypto"] },
   { company: "DEUNA", title: "Enterprise Sales Executive – Payments (Remote MX)", url: "https://www.linkedin.com/jobs/view/4361105504/", location: "Ciudad de México (Remote)", tags: ["Enterprise Sales", "Payments", "Fintech", "Remote"] },
   { company: "Nuvei", title: "Sr. Account Manager – Mexico", url: "https://www.linkedin.com/jobs/view/4279700652/", location: "México", tags: ["Account Manager", "Payments", "Fintech"] },
