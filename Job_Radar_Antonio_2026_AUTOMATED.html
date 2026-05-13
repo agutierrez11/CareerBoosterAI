@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fintech Job Radar 2026 — Antonio Gutiérrez Jiménez</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --accent-primary: #38bdf8;
+            --accent-gold: #f59e0b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        .hero {
+            position: relative;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--glass-border);
+            overflow: hidden;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin: 0;
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            color: var(--text-dim);
+            font-size: 1.4rem;
+            margin-top: 15px;
+            max-width: 800px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: -60px auto 100px;
+            padding: 0 40px;
+            position: relative;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stat-card .value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-top: 10px;
+            color: var(--accent-primary);
+        }
+
+        .automation-banner {
+            background: linear-gradient(90deg, rgba(56, 189, 248, 0.1), rgba(245, 158, 11, 0.1));
+            border: 1px solid var(--accent-primary);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 50px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            padding: 35px;
+            border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(20px);
+        }
+
+        .card:hover {
+            transform: translateY(-12px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .score-badge {
+            position: absolute;
+            top: 30px;
+            right: 35px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 10px 18px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 1.3rem;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        .company-name {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0;
+            color: var(--accent-primary);
+        }
+
+        .role-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 8px 0 20px 0;
+            color: var(--text-main);
+        }
+
+        .why-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 25px;
+            flex-grow: 1;
+        }
+
+        .why-box b {
+            color: var(--accent-gold);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .apply-btn {
+            display: block;
+            text-align: center;
+            background: linear-gradient(135deg, var(--accent-primary), #0ea5e9);
+            color: var(--bg-dark);
+            text-decoration: none;
+            padding: 16px;
+            border-radius: 18px;
+            font-weight: 800;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading" class="loading-overlay">
+        <h2>🛰️ Cargando Inteligencia de Mercado...</h2>
+    </div>
+
+    <div class="hero">
+        <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2070" 
+             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.2; z-index: -1;">
+        <h1>Fintech Job Radar</h1>
+        <p>Strategic Leadership Opportunities — Antonio Gutiérrez Jiménez</p>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid" id="stats">
+            <div class="stat-card"><h3>Vacantes Analizadas</h3><div class="value">0</div></div>
+            <div class="stat-card"><h3>Elite Matches</h3><div class="value">0</div></div>
+            <div class="stat-card"><h3>Ubicación</h3><div class="value">🇲🇽 / 🌎</div></div>
+        </div>
+
+        <div class="automation-banner">
+            <div class="icon">🤖</div>
+            <div class="text">
+                <h4>Antigravity: Radar Automatizado 2026</h4>
+                <p>Antonio, este radar está conectado a tu sistema de inteligencia en tiempo real.</p>
+            </div>
+        </div>
+
+        <div class="grid-container" id="radarGrid">
+            <!-- Las vacantes se cargarán aquí dinámicamente -->
+        </div>
+    </div>
+
+    <script>
+        async function loadRadar() {
+            try {
+                // Intenta cargar desde el archivo local de vacantes activas
+                const response = await fetch('api/data/active_vacancies.json');
+                const jobs = await response.json();
+                
+                const grid = document.getElementById('radarGrid');
+                grid.innerHTML = '';
+
+                jobs.forEach(job => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div class="score-badge">${job.score || '9.5'}</div>
+                        <h3 class="company-name">${job.company}</h3>
+                        <div class="role-name">${job.title}</div>
+                        <div class="why-box">
+                            <b>💡 ¿Por qué es un Match?</b>
+                            <div class="why-text">${job.rationale || 'Tu perfil GTM encaja con su estrategia de expansión.'}</div>
+                        </div>
+                        <a href="${job.url}" target="_blank" class="apply-btn">Ver Detalles</a>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading').style.display = 'none', 500);
+
+            } catch (error) {
+                console.error('Error al cargar vacantes:', error);
+                document.getElementById('loading').innerHTML = '<h2>⚠️ Error al conectar con el Radar. Ejecuta el servidor local.</h2>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadRadar);
+    </script>
+</body>
+</html>
