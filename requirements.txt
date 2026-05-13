@@ -7,5 +7,4 @@ pydantic
 pydantic-settings
 sqlalchemy
 python-multipart
-scrape-do
 python-dotenv
