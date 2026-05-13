@@ -32,15 +32,16 @@ class JobRadar:
         # 2. Fetch live data from MULTIPLE sources
         live_jobs = []
         
-        # A. Always try Remotive (Direct API)
-        remotive_jobs = self._search_remotive(query=query, location=location)
-        live_jobs.extend(remotive_jobs)
+        # Surgical Query for Deep Links
+        search_query = f'"{query}" (site:linkedin.com/jobs OR site:lever.co OR site:greenhouse.io OR site:boards.eu.greenhouse.io) {location}'
         
-        # B. If Scrape.do is available, add Google Strategic Search (LinkedIn, Jooble, Direct Sites)
         if self.settings.scrape_do_token:
-            google_jobs = self._search_scrape_do(query=query, location=location)
-            live_jobs.extend(google_jobs)
-
+            # Source A: Google Strategic (Targeting Direct Boards)
+            live_jobs.extend(self._search_scrape_do(query=search_query, location=location))
+            
+        # Source B: Remotive (Direct API)
+        live_jobs.extend(self._search_remotive(query=query, location=location))
+        
         # 3. Score and merge
         all_jobs = local_jobs + live_jobs
         scored = [self._score_job(job) for job in all_jobs]
