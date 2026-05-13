@@ -34,8 +34,13 @@ const getAnalysis = (job) => {
 const scoreJob = (job) => {
   const text = `${job.title} ${job.tags?.join(" ") || ""} ${job.candidate_required_location || ""}`.toLowerCase();
   let score = 6.0;
-  const keywords = ["fintech", "payments", "sales", "manager", "director", "latam", "mexico", "b2b", "remote", "business development", "commercial", "growth", "crypto"];
-  keywords.forEach(kw => { if (text.includes(kw)) score += 0.4; });
+  // Palabras clave de perfil GTM Fintech
+  const profileKw = ["fintech", "payments", "sales", "manager", "director", "b2b", "business development", "commercial", "growth", "acquiring", "kyc", "aml"];
+  profileKw.forEach(kw => { if (text.includes(kw)) score += 0.5; });
+  // Bonus extra por cobertura México/LATAM/Remoto — perfil Cancún
+  if (text.includes("mexico") || text.includes("méxico")) score += 1.5;
+  if (text.includes("latam") || text.includes("latin america")) score += 1.2;
+  if (text.includes("remote") || text.includes("remoto") || text.includes("worldwide")) score += 0.8;
   return Math.min(score, 10).toFixed(1);
 };
 
@@ -48,21 +53,21 @@ export default function JobRadar() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      // API pública y gratuita de vacantes remotas en Fintech
-      const [r1, r2] = await Promise.allSettled([
-        fetch("https://remotive.com/api/remote-jobs?search=fintech+sales+manager&limit=20"),
-        fetch("https://remotive.com/api/remote-jobs?search=payments+director+latam&limit=10"),
+      // Queries quirúrgicas: Remoto desde México / cobertura LATAM
+      const [r1, r2, r3] = await Promise.allSettled([
+        fetch("https://remotive.com/api/remote-jobs?search=fintech+sales+manager+latam&limit=15"),
+        fetch("https://remotive.com/api/remote-jobs?search=payments+director+mexico+remote&limit=15"),
+        fetch("https://remotive.com/api/remote-jobs?search=business+development+fintech+latam&limit=10"),
       ]);
 
       let allJobs = [];
-      for (const result of [r1, r2]) {
+      for (const result of [r1, r2, r3]) {
         if (result.status === "fulfilled" && result.value.ok) {
           const data = await result.value.json();
           allJobs = [...allJobs, ...(data.jobs || [])];
         }
       }
 
-      // Deduplicar y enriquecer con análisis táctico
       const seen = new Set();
       const enriched = allJobs
         .filter(j => {
@@ -134,11 +139,11 @@ export default function JobRadar() {
         <h2 className="text-lg font-bold text-slate-400 mb-4 uppercase tracking-widest text-xs">🔗 Fuentes de Búsqueda Directa</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { name: "RemoteJobsFinder", emoji: "🌐", url: "https://remotejobsfinder.co/en?country=USA&query=fintech+sales+manager", tip: "300k+ vacantes remotas" },
-            { name: "LinkedIn Jobs", emoji: "💼", url: "https://www.linkedin.com/jobs/search/?keywords=fintech%20sales%20director%20LATAM&location=Mexico&f_E=4%2C5%2C6", tip: "Roles Senior / Director+" },
-            { name: "JobLeads", emoji: "🎯", url: "https://www.jobleads.com/search/jobs?q=sales+director+fintech&l=mexico&salary=100000", tip: "Roles $100k+ USD" },
-            { name: "Remotive", emoji: "🛸", url: "https://remotive.com/remote-jobs/sales/fintech", tip: "Fintech remoto global" },
-            { name: "Glassdoor", emoji: "🔮", url: "https://www.glassdoor.com/Job/jobs.htm?sc.keyword=fintech+sales+director&locT=N&locId=1&jl=100000&seniority=DIRECTOR", tip: "Salarios + Reviews" },
+            { name: "RemoteJobsFinder", emoji: "🌐", url: "https://remotejobsfinder.co/en?country=MX&query=fintech+sales+manager+remote", tip: "Remoto desde México" },
+            { name: "LinkedIn Jobs", emoji: "💼", url: "https://www.linkedin.com/jobs/search/?keywords=fintech+sales+director+LATAM+remote&location=Mexico&f_E=4%2C5%2C6&f_WT=2", tip: "Director+ Remoto LATAM" },
+            { name: "JobLeads", emoji: "🎯", url: "https://www.jobleads.com/search/jobs?q=sales+director+fintech+latam&l=remote", tip: "Ejecutivo Remoto $100k+" },
+            { name: "Remotive", emoji: "🛸", url: "https://remotive.com/remote-jobs/sales?search=fintech+latam", tip: "Fintech Remoto / LATAM" },
+            { name: "Glassdoor", emoji: "🔮", url: "https://www.glassdoor.com/Job/jobs.htm?sc.keyword=fintech+sales+director+latam&remoteWorkType=1&seniority=DIRECTOR", tip: "Remoto + Salarios reales" },
           ].map((src, i) => (
             <a key={i} href={src.url} target="_blank" rel="noreferrer"
               className="flex items-center gap-3 bg-[#11151f] border border-white/5 hover:border-sky-500/40 p-4 rounded-2xl transition-all group">
