@@ -9,4 +9,3 @@ sqlalchemy
 python-multipart
 python-dotenv
 pdfminer.six
-scrape-do
