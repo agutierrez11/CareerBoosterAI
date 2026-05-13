@@ -29,11 +29,17 @@ class JobRadar:
         # 1. Start with local verified jobs as baseline
         local_jobs = self.load_local_jobs()
         
-        # 2. Fetch live data
+        # 2. Fetch live data from MULTIPLE sources
+        live_jobs = []
+        
+        # A. Always try Remotive (Direct API)
+        remotive_jobs = self._search_remotive(query=query, location=location)
+        live_jobs.extend(remotive_jobs)
+        
+        # B. If Scrape.do is available, add Google Strategic Search (LinkedIn, Jooble, Direct Sites)
         if self.settings.scrape_do_token:
-            live_jobs = self._search_scrape_do(query=query, location=location)
-        else:
-            live_jobs = self._search_remotive(query=query, location=location)
+            google_jobs = self._search_scrape_do(query=query, location=location)
+            live_jobs.extend(google_jobs)
 
         # 3. Score and merge
         all_jobs = local_jobs + live_jobs
