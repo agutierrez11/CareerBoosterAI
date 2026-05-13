@@ -10,11 +10,26 @@ class JobRadar:
             "Digital Payments", "SaaS", "Strategic Sales"
         ]
         self.preferred_locations = ["LATAM", "Mexico", "Remote", "Worldwide", "North America", "Everywhere"]
+        self.data_path = os.path.join(os.path.dirname(__file__), "data", "active_vacancies.json")
+
+    def load_local_jobs(self):
+        """Loads verified jobs from the local database."""
+        import json
+        if os.path.exists(self.data_path):
+            with open(self.data_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return []
 
     def search_jobs(self, query=None):
         """
-        Fetches remote jobs and filters for relevancy to Antonio's profile and location.
+        Fetches jobs, prioritizing local verified data for Antonio.
         """
+        local_jobs = self.load_local_jobs()
+        
+        # If no query, return local verified jobs as top priority
+        if not query:
+            return local_jobs
+
         search_term = query or "Sales"
         print(f"Fetching real remote jobs for: {search_term}...")
         
@@ -68,8 +83,24 @@ class JobRadar:
             print(f"Error fetching real jobs: {e}")
             return []
 
+    def save_results(self, jobs):
+        """Saves findings to the local database."""
+        import json
+        with open(self.data_path, 'w', encoding='utf-8') as f:
+            json.dump(jobs, f, indent=2, ensure_ascii=False)
+        print(f"Successfully saved {len(jobs)} active vacancies to {self.data_path}")
+
 if __name__ == "__main__":
+    # This block runs during the Daily GitHub Action scan
     radar = JobRadar()
-    jobs = radar.search_jobs()
-    for job in jobs:
-        print(f"- {job['title']} at {job['company']}")
+    print("🚀 Starting Daily Strategic Scan...")
+    
+    # 1. Fetch from Remotive (as baseline)
+    new_jobs = radar.search_jobs(query="Fintech Sales Mexico")
+    
+    # 2. In a real scenario, we would add more scrapers here
+    # For now, we ensure the local database is updated
+    if new_jobs:
+        radar.save_results(new_jobs)
+    else:
+        print("⚠️ No new jobs found today. Keeping existing data.")

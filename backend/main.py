@@ -17,7 +17,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-CV_PATH = r"C:\Users\Antonio\OneDrive\Escritorio\CVs_2026"
+# Configuración de rutas relativas para portabilidad (Vercel/Local)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CV_PATH = os.path.join(BASE_DIR, "uploads")
+if not os.path.exists(CV_PATH):
+    os.makedirs(CV_PATH)
+
 analyzer = CVAnalyzer(CV_PATH)
 radar = JobRadar()
 optimizer = ApplicationOptimizer()
