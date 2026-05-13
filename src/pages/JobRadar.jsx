@@ -33,7 +33,7 @@ export default function JobRadar() {
           className="absolute top-0 left-0 w-full h-full object-cover opacity-20 -z-10 grayscale-[20%] brightness-[0.7]"
           alt="Fintech Background"
         />
-        <h1 className="text-6xl md:text-7xl font-[800] tracking-tighter bg-gradient-to-right from-sky-400 to-amber-500 bg-clip-text text-transparent">
+        <h1 className="text-6xl md:text-7xl font-[800] tracking-tighter bg-gradient-to-r from-sky-400 to-amber-500 bg-clip-text text-transparent">
           Fintech Job Radar
         </h1>
         <p className="text-slate-400 text-xl md:text-2xl mt-4 max-w-3xl font-light">
