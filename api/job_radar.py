@@ -57,6 +57,49 @@ class JobRadar:
         unique_jobs.sort(key=lambda item: item.get("score", item.get("match_score", 0)), reverse=True)
         return unique_jobs[:30]
 
+    def run(self, query=None, location=None):
+        print(f"🛰️ Starting Strategic Radar for: {query} in {location}...")
+        jobs = self.search_jobs(query=query, location=location)
+        
+        # Save to JSON
+        self.save_results(jobs)
+        
+        # AUTO-UPDATE Standalone HTML Report
+        self._update_html_report(jobs)
+        
+        # Telegram Alerts
+        high_score_jobs = [j for j in jobs if j.get('score', 0) >= 8.5]
+        if high_score_jobs:
+            print(f"🚀 Found {len(high_score_jobs)} Elite Matches! Sending alerts...")
+            for job in high_score_jobs:
+                self.send_telegram_alert(job)
+        
+        return jobs
+
+    def _update_html_report(self, jobs):
+        # Path to the standalone report
+        report_path = "Job_Radar_Antonio_2026_AUTOMATED.html"
+        try:
+            with open(report_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Inject new data into the JS constant
+            import json
+            jobs_json = json.dumps(jobs, indent=4)
+            start_marker = "const jobs = ["
+            end_marker = "];"
+            
+            start_idx = content.find(start_marker)
+            end_idx = content.find(end_marker, start_idx)
+            
+            if start_idx != -1 and end_idx != -1:
+                new_content = content[:start_idx + 13] + jobs_json[1:-1] + content[end_idx:]
+                with open(report_path, 'w', encoding='utf-8') as f:
+                    f.write(new_content)
+                print(f"✅ Standalone HTML Report updated: {report_path}")
+        except Exception as e:
+            print(f"⚠️ Could not update HTML report: {e}")
+
     def _search_remotive(self, query=None, location=None):
         try:
             response = requests.get(self.remotive_url, timeout=12)
