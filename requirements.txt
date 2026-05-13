@@ -8,3 +8,5 @@ pydantic-settings
 sqlalchemy
 python-multipart
 python-dotenv
+pdfminer.six
+scrape-do
