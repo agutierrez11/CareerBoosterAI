@@ -1,51 +1,37 @@
-import os
-import json
-from pdfminer.high_level import extract_text
+from pathlib import Path
+
+# Rutas dinámicas — nunca absolutas, funciona en cualquier máquina/servidor
+BASE_DIR = Path(__file__).resolve().parent.parent
+UPLOADS_DIR = BASE_DIR / "storage" / "uploads"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
 
 class CVAnalyzer:
-    def __init__(self, cv_folder):
-        self.cv_folder = cv_folder
+    def __init__(self, cv_folder=None):
+        self.cv_folder = Path(cv_folder) if cv_folder else UPLOADS_DIR
 
-    def scan_cvs(self):
+    def scan_cvs(self) -> dict:
         cv_data = {}
-        if not os.path.exists(self.cv_folder):
-            print(f"Error: Folder {self.cv_folder} not found.")
+        if not self.cv_folder.exists():
             return {}
-
-        print(f"Scanning folder: {self.cv_folder}")
-        for filename in os.listdir(self.cv_folder):
-            if filename.lower().endswith(".pdf"):
-                filepath = os.path.join(self.cv_folder, filename)
-                try:
-                    text = extract_text(filepath)
-                    cv_data[filename] = {
-                        "content": text,
-                        "length": len(text)
-                    }
-                    print(f"Processed: {filename} ({len(text)} chars)")
-                except Exception as e:
-                    print(f"Failed to process {filename}: {e}")
-        
+        for filepath in self.cv_folder.glob("*.pdf"):
+            try:
+                from pdfminer.high_level import extract_text
+                text = extract_text(str(filepath))
+                cv_data[filepath.name] = {
+                    "content": text,
+                    "length": len(text),
+                }
+            except Exception as e:
+                print(f"Failed to process {filepath.name}: {e}")
         return cv_data
 
-    def get_cv_text(self, filename):
-        """Extracts text from a specific CV file."""
-        filepath = os.path.join(self.cv_folder, filename)
-        if os.path.exists(filepath) and filename.lower().endswith(".pdf"):
+    def get_cv_text(self, filename: str) -> str | None:
+        filepath = self.cv_folder / filename
+        if filepath.exists() and filename.endswith(".pdf"):
             try:
-                return extract_text(filepath)
+                from pdfminer.high_level import extract_text
+                return extract_text(str(filepath))
             except Exception as e:
                 print(f"Error reading {filename}: {e}")
         return None
-
-    def save_master_profile(self, data, output_file="master_profile.json"):
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-        print(f"Master profile saved to {output_file}")
-
-if __name__ == "__main__":
-    # Pointing to the verified user path
-    CV_PATH = r"C:\Users\Antonio\OneDrive\Escritorio\CVs_2026"
-    analyzer = CVAnalyzer(CV_PATH)
-    data = analyzer.scan_cvs()
-    analyzer.save_master_profile(data)

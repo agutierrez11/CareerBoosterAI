@@ -53,45 +53,22 @@ export default function JobRadar() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      // Queries quirúrgicas: Remoto desde México / cobertura LATAM
-      const [r1, r2, r3] = await Promise.allSettled([
-        fetch("https://remotive.com/api/remote-jobs?search=fintech+sales+manager+latam&limit=15"),
-        fetch("https://remotive.com/api/remote-jobs?search=payments+director+mexico+remote&limit=15"),
-        fetch("https://remotive.com/api/remote-jobs?search=business+development+fintech+latam&limit=10"),
-      ]);
-
-      let allJobs = [];
-      for (const result of [r1, r2, r3]) {
-        if (result.status === "fulfilled" && result.value.ok) {
-          const data = await result.value.json();
-          allJobs = [...allJobs, ...(data.jobs || [])];
-        }
-      }
-
-      const seen = new Set();
-      const enriched = allJobs
-        .filter(j => {
-          if (seen.has(j.id)) return false;
-          seen.add(j.id);
-          return true;
-        })
+      // Apunta al backend proxy — funciona en localhost Y en Vercel
+      const res = await fetch(`/api/jobs?q=fintech+sales+manager+latam&location=mexico+remote`);
+      if (!res.ok) throw new Error("Backend error");
+      const data = await res.json();
+      const enriched = data
         .map(j => ({
-          company: j.company_name,
-          title: j.title,
-          url: j.url,
-          location: j.candidate_required_location || "Remote",
+          ...j,
           score: parseFloat(scoreJob(j)),
           rationale: getAnalysis(j),
-          salary: j.salary || null,
-          tags: j.tags?.slice(0, 4) || [],
         }))
         .sort((a, b) => b.score - a.score)
         .slice(0, 12);
-
       setJobs(enriched);
       setLastUpdated(new Date().toLocaleTimeString("es-MX"));
     } catch (e) {
-      console.error("Fetch error:", e);
+      console.error("Backend fetch failed:", e);
     } finally {
       setLoading(false);
     }
