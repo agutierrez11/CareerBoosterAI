@@ -6,14 +6,13 @@ import CVVault from "./pages/CVVault";
 import JobRadar from "./pages/JobRadar";
 import Optimizer from "./pages/Optimizer";
 import Settings from "./pages/Settings";
-import "./App.css";
 
 function App() {
   return (
     <Router>
       <Layout>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<JobRadar />} />
           <Route path="/vault" element={<CVVault />} />
           <Route path="/radar" element={<JobRadar />} />
           <Route path="/optimizer" element={<Optimizer />} />
