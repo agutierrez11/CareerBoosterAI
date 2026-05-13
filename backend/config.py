@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     scrape_do_token: str | None = Field(None, env="SCRAPE_DO_TOKEN")
     deepseek_api_key: str | None = Field(None, env="DEEPSEEK_API_KEY")
     
+    # Telegram Config
+    telegram_bot_token: str | None = Field(None, env="TELEGRAM_BOT_TOKEN")
+    telegram_chat_id: str | None = Field(None, env="TELEGRAM_CHAT_ID")
+    
     allow_origins: List[str] = ["http://localhost:5173", "http://localhost:3000", "*"]
     env: str = "development"
 

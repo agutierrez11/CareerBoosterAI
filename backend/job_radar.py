@@ -172,10 +172,49 @@ class JobRadar:
         with open(self.data_path, 'w', encoding='utf-8') as f:
             json.dump(jobs, f, indent=2, ensure_ascii=False)
 
+    def send_telegram_alert(self, job):
+        """Sends a tactical alert to Telegram for high-score jobs."""
+        if not self.settings.telegram_bot_token or not self.settings.telegram_chat_id:
+            return
+
+        token = self.settings.telegram_bot_token
+        chat_id = self.settings.telegram_chat_id
+        
+        message = (
+            f"🎯 *¡NUEVA VACANTE ELITE DETECTADA!*\n\n"
+            f"🏢 *Empresa:* {job['company']}\n"
+            f"💼 *Puesto:* {job['title']}\n"
+            f"📊 *Match Score:* {job['score']}/10\n"
+            f"📍 *Ubicación:* {job['location']}\n\n"
+            f"🔗 [Ver Vacante y Detonar Aplicación]({job['url']})"
+        )
+        
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        try:
+            requests.post(url, json={
+                "chat_id": chat_id,
+                "text": message,
+                "parse_mode": "Markdown"
+            }, timeout=10)
+            print(f"✅ Alert sent for {job['company']}")
+        except Exception as e:
+            print(f"❌ Failed to send Telegram alert: {e}")
+
 if __name__ == "__main__":
     from backend.config import settings
     radar = JobRadar(settings)
     print("🚀 Starting Daily Strategic Scan...")
-    new_jobs = radar.search_jobs(query="Fintech Sales Mexico")
+    
+    # 1. Full market scan
+    new_jobs = radar.search_jobs(query="Fintech Sales Manager Mexico LATAM")
+    
     if new_jobs:
         radar.save_results(new_jobs)
+        
+        # 2. Alert on High-Score Targets
+        # Any job with score >= 8 (Elite Match)
+        for job in new_jobs:
+            if job.get("score", 0) >= 8:
+                radar.send_telegram_alert(job)
+    else:
+        print("⚠️ No new jobs found today.")
