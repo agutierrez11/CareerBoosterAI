@@ -1,3 +1,4 @@
+# CareerBoosterAI Tactical Dependencies
 requests
 fastapi
 uvicorn
