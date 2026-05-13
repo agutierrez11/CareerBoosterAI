@@ -1,10 +1,11 @@
-# CareerBoosterAI Tactical Dependencies
-requests
 fastapi
 uvicorn
-python-multipart
+requests
+beautifulsoup4
+openai
 pydantic
 pydantic-settings
-pdfminer.six
-openai
-beautifulsoup4
+sqlalchemy
+python-multipart
+scrape-do
+python-dotenv

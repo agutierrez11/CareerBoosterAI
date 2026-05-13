@@ -26,6 +26,22 @@ class JobRadar:
         return []
 
     def search_jobs(self, query=None, location=None):
+        raw_jobs = self._fetch_all_sources(query, location)
+        analyzed_jobs = []
+        
+        from api.optimizer import ApplicationOptimizer
+        optimizer = ApplicationOptimizer(self.settings)
+        
+        # Limit analysis to top 10 for speed
+        for job in raw_jobs[:10]:
+            analysis = optimizer.analyze_match("CV context here", job.get('description', ''))
+            job['score'] = analysis.get('score', 7.5)
+            job['rationale'] = analysis
+            analyzed_jobs.append(job)
+            
+        return analyzed_jobs
+
+    def _fetch_all_sources(self, query=None, location=None):
         # 1. Start with local verified jobs as baseline
         local_jobs = self.load_local_jobs()
         

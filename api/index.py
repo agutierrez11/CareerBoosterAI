@@ -2,16 +2,20 @@ import os
 import shutil
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from backend.config import settings
-from backend.cv_analyzer import CVAnalyzer
-from backend.job_radar import JobRadar
-from backend.optimizer import ApplicationOptimizer
+from api.config import settings
+from api.cv_analyzer import CVAnalyzer
+from api.job_radar import JobRadar
+from api.optimizer import ApplicationOptimizer
+from api.models import init_db, SessionLocal, Job, Application
 
-app = FastAPI(title=settings.app_name)
+app = FastAPI(title="Career Booster AI 2.0")
+
+# Initialize Database on Startup
+init_db()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allow_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,7 +27,57 @@ optimizer = ApplicationOptimizer(settings)
 
 @app.get("/")
 def read_root():
-    return {"message": "Career Booster AI Backend is running"}
+    return {"message": "Career Booster AI 2.0 Backend is running"}
+
+@app.get("/api/jobs")
+def get_jobs(
+    q: str | None = Query(None, description="Search term"),
+    location: str | None = Query(None, description="Location filter"),
+):
+    return radar.search_jobs(query=q, location=location)
+
+@app.post("/api/track")
+def track_application(job_data: dict):
+    db = SessionLocal()
+    try:
+        # Create or Get Job
+        job = db.query(Job).filter(Job.url == job_data['url']).first()
+        if not job:
+            job = Job(
+                company=job_data.get('company', 'Unknown'),
+                title=job_data.get('title', 'Unknown'),
+                url=job_data['url'],
+                score=job_data.get('score', 0),
+                rationale=job_data.get('rationale', {})
+            )
+            db.add(job)
+            db.commit()
+            db.refresh(job)
+        
+        # Create Application
+        app_record = Application(job_id=job.id, status="Applied")
+        db.add(app_record)
+        db.commit()
+        return {"status": "success", "message": "Application tracked!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+@app.get("/api/stats")
+def get_stats():
+    db = SessionLocal()
+    try:
+        total_apps = db.query(Application).count()
+        # Mocking some metrics for now
+        return {
+            "total_applications": total_apps,
+            "response_rate": "15%",
+            "active_interviews": 2
+        }
+    finally:
+        db.close()
 
 @app.get("/cvs")
 def get_cvs():
@@ -37,43 +91,6 @@ def get_cvs():
         for filename, data in cv_data.items()
     ]
 
-@app.get("/jobs")
-def get_jobs(
-    q: str | None = Query(None, description="Search term"),
-    location: str | None = Query(None, description="Location filter"),
-):
-    return radar.search_jobs(query=q, location=location)
-
-@app.post("/optimize")
-def optimize_cv(
-    cv_id: str,
-    job_id: str,
-    job_description: str = "",
-):
-    # Ensure analyzer has get_cv_text or equivalent
-    cv_data = analyzer.get_cv_text(cv_id) if hasattr(analyzer, 'get_cv_text') else "CV Content Placeholder"
-    if not cv_data:
-        raise HTTPException(status_code=404, detail="CV not found")
-    return optimizer.optimize_application(cv_data, job_description)
-
-@app.post("/cvs/upload")
-async def upload_cv(file: UploadFile = File(...)):
-    if not settings.cv_folder.exists():
-        settings.cv_folder.mkdir(parents=True, exist_ok=True)
-
-    file_location = settings.cv_folder / file.filename
-    with open(file_location, "wb+") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    return {"filename": file.filename, "path": str(file_location)}
-
-@app.get("/jobs/custom")
-def get_custom_jobs(url: str = Query(..., description="Job page URL")):
-    from backend.url_fetcher import URLFetcher
-
-    fetcher = URLFetcher()
-    return fetcher.scrape_url(url)
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=settings.host, port=settings.port)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
