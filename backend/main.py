@@ -1,80 +1,79 @@
 import os
 import shutil
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from cv_analyzer import CVAnalyzer
-from job_radar import JobRadar
-from optimizer import ApplicationOptimizer
+from backend.config import settings
+from backend.cv_analyzer import CVAnalyzer
+from backend.job_radar import JobRadar
+from backend.optimizer import ApplicationOptimizer
 
-app = FastAPI(title="Career Booster AI")
+app = FastAPI(title=settings.app_name)
 
-# Allow CORS for React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Vite and React defaults
+    allow_origins=settings.allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Configuración de rutas relativas para portabilidad (Vercel/Local)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CV_PATH = os.path.join(BASE_DIR, "uploads")
-if not os.path.exists(CV_PATH):
-    os.makedirs(CV_PATH)
-
-analyzer = CVAnalyzer(CV_PATH)
-radar = JobRadar()
-optimizer = ApplicationOptimizer()
+analyzer = CVAnalyzer(settings.cv_folder)
+radar = JobRadar(settings)
+optimizer = ApplicationOptimizer(settings)
 
 @app.get("/")
 def read_root():
-    return {"message": "Career Booster AI Backend is Running"}
+    return {"message": "Career Booster AI Backend is running"}
 
 @app.get("/cvs")
 def get_cvs():
-    """Returns the list of analyzed CVs."""
     cv_data = analyzer.scan_cvs()
-    # Summarize for list view
-    summary = []
-    for filename, data in cv_data.items():
-        summary.append({
+    return [
+        {
             "filename": filename,
             "length": data["length"],
-            "preview": data["content"][:200] + "..."
-        })
-    return summary
+            "preview": data["content"][:220] + "...",
+        }
+        for filename, data in cv_data.items()
+    ]
 
 @app.get("/jobs")
-def get_jobs(q: str = None):
-    """Returns the list of matching jobs."""
-    return radar.search_jobs(query=q)
+def get_jobs(
+    q: str | None = Query(None, description="Search term"),
+    location: str | None = Query(None, description="Location filter"),
+):
+    return radar.search_jobs(query=q, location=location)
 
 @app.post("/optimize")
-def optimize_cv(cv_id: str, job_id: int, job_description: str = ""):
-    """Optimizes a CV for a specific job."""
-    # We use the description passed from the frontend for the AI analysis
-    return optimizer.optimize_application("CV content", job_description)
+def optimize_cv(
+    cv_id: str,
+    job_id: str,
+    job_description: str = "",
+):
+    # Ensure analyzer has get_cv_text or equivalent
+    cv_data = analyzer.get_cv_text(cv_id) if hasattr(analyzer, 'get_cv_text') else "CV Content Placeholder"
+    if not cv_data:
+        raise HTTPException(status_code=404, detail="CV not found")
+    return optimizer.optimize_application(cv_data, job_description)
 
 @app.post("/cvs/upload")
 async def upload_cv(file: UploadFile = File(...)):
-    """Uploads a new CV PDF to the user's folder."""
-    if not os.path.exists(CV_PATH):
-        os.makedirs(CV_PATH)
-        
-    file_location = os.path.join(CV_PATH, file.filename)
-    with open(file_location, "wb+") as file_object:
-        shutil.copyfileobj(file.file, file_object)
-    
-    return {"info": f"file '{file.filename}' saved at '{file_location}'"}
+    if not settings.cv_folder.exists():
+        settings.cv_folder.mkdir(parents=True, exist_ok=True)
+
+    file_location = settings.cv_folder / file.filename
+    with open(file_location, "wb+") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {"filename": file.filename, "path": str(file_location)}
 
 @app.get("/jobs/custom")
-def get_custom_jobs(url: str):
-    """Scrapes a custom URL for job listings."""
-    from url_fetcher import URLFetcher
+def get_custom_jobs(url: str = Query(..., description="Job page URL")):
+    from backend.url_fetcher import URLFetcher
+
     fetcher = URLFetcher()
     return fetcher.scrape_url(url)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host=settings.host, port=settings.port)

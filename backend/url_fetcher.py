@@ -1,75 +1,69 @@
+import re
+from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
-import re
 
 class URLFetcher:
     def __init__(self):
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
         }
+        self.job_keywords = [
+            "Sales", "Business Development", "BDR", "Account Executive",
+            "Fintech", "Payments", "B2B", "Onboarding", "Fraud", "KYC", "AML"
+        ]
 
     def scrape_url(self, url):
-        """
-        Attempts to find job titles and descriptions in a generic HTML page.
-        This is a heuristic-based approach.
-        """
-        print(f"Scraping custom URL: {url}")
         try:
-            response = requests.get(url, headers=self.headers, timeout=10)
+            response = requests.get(url, headers=self.headers, timeout=12)
             response.raise_for_status()
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-            jobs = []
-            # Heuristic: Find elements that look like job titles (h1, h2, h3, or links)
-            # We look for common keywords in parent containers or text
-            job_keywords = ["Sales", "BDR", "Representative", "Consultant", "Fintech", "Payments", "B2B"]
-            
-            # Simple approach: Find all <a> tags or <h3> tags and see if they contain keywords
-            potential_items = soup.find_all(['a', 'h2', 'h3', 'div'], class_=re.compile(r'job|vacancy|opening|position', re.I))
-            
-            if not potential_items:
-                # Fallback to searching all text for keywords
-                potential_items = soup.find_all(['h2', 'h3', 'a'])
-
-            for i, item in enumerate(potential_items[:10]):
-                text = item.get_text(separator=' ', strip=True)
-                if any(kw.lower() in text.lower() for kw in job_keywords):
-                    # Try to find a link if the current item isn't an <a>
-                    link = "#"
-                    if item.name == 'a':
-                        link = item.get('href', '#')
-                    else:
-                        anchor = item.find('a')
-                        if anchor:
-                            link = anchor.get('href', '#')
-                    
-                    # Ensure absolute URL
-                    if link.startswith('/'):
-                        from urllib.parse import urljoin
-                        link = urljoin(url, link)
-
-                    jobs.append({
-                        "id": 500 + i,
-                        "title": text[:100],
-                        "company": "Scraped from site",
-                        "location": "See site",
-                        "salary": "N/A",
-                        "posted": "Recent",
-                        "description": "Found via URL scraper. Click link to view details.",
-                        "tags": ["Scraped", "Custom"],
-                        "url": link
-                    })
-            
-            # Remove duplicates
-            unique_jobs = []
-            seen_titles = set()
-            for job in jobs:
-                if job['title'] not in seen_titles:
-                    unique_jobs.append(job)
-                    seen_titles.add(job['title'])
-
-            return unique_jobs[:10]
-            
-        except Exception as e:
-            print(f"Error scraping custom URL: {e}")
+        except Exception as exc:
+            print(f"URLFetcher error: {exc}")
             return []
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        jobs = []
+        potential_items = soup.select("a, h2, h3, .job, .vacancy, .position, [role='link']")
+
+        seen = set()
+        for item in potential_items:
+            text = item.get_text(" ", strip=True)
+            if not text:
+                continue
+            if any(kw.lower() in text.lower() for kw in self.job_keywords):
+                link = self._extract_link(item, url)
+                title = self._clean_text(text)
+                if title in seen:
+                    continue
+                seen.add(title)
+                jobs.append({
+                    "id": hash(title + link),
+                    "title": title[:120],
+                    "company": "External Page",
+                    "location": "Ver URL",
+                    "salary": "N/A",
+                    "posted": "Reciente",
+                    "description": text,
+                    "tags": ["Scraped", "Custom"],
+                    "url": link,
+                })
+
+        return jobs[:15]
+
+    def _extract_link(self, item, base_url):
+        if item.name == "a" and item.has_attr("href"):
+            href = item["href"]
+        else:
+            anchor = item.find("a", href=True)
+            href = anchor["href"] if anchor else "#"
+        if href.startswith("/"):
+            href = urljoin(base_url, href)
+        if href.startswith("//"):
+            href = f"{urlparse(base_url).scheme}:{href}"
+        return href
+
+    def _clean_text(self, value):
+        return re.sub(r"\s+", " ", value).strip()

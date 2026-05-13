@@ -28,6 +28,16 @@ class CVAnalyzer:
         
         return cv_data
 
+    def get_cv_text(self, filename):
+        """Extracts text from a specific CV file."""
+        filepath = os.path.join(self.cv_folder, filename)
+        if os.path.exists(filepath) and filename.lower().endswith(".pdf"):
+            try:
+                return extract_text(filepath)
+            except Exception as e:
+                print(f"Error reading {filename}: {e}")
+        return None
+
     def save_master_profile(self, data, output_file="master_profile.json"):
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
