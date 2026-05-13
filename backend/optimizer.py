@@ -1,5 +1,6 @@
 import os
 import time
+import json
 from backend.config import settings
 
 class ApplicationOptimizer:
@@ -7,60 +8,64 @@ class ApplicationOptimizer:
         self.settings = settings
 
     def optimize_application(self, cv_content, job_description):
-        if self.settings.openai_api_key:
-            return self._optimize_with_openai(cv_content, job_description)
+        if self.settings.deepseek_api_key:
+            return self._optimize_with_deepseek(cv_content, job_description)
         return self._optimize_mock(cv_content, job_description)
 
-    def _optimize_with_openai(self, cv_content, job_description):
-        import openai
-        # Compatibility for both v0.28 and v1.0+
+    def _optimize_with_deepseek(self, cv_content, job_description):
+        import requests
+        
+        api_key = self.settings.deepseek_api_key
+        url = "https://api.deepseek.com/chat/completions"
+        
+        prompt = (
+            "Eres un experto en GTM y Sales Recruitment para Fintech. "
+            "Recibe el texto del CV de Antonio Gutiérrez y la descripción de una vacante. "
+            "Devuelve un JSON con: match_score (0-100), matching_skills (lista), "
+            "suggested_rewrites (lista de objetos {original, rewritten}), "
+            "summary_punchline (una frase de alto impacto)."
+        )
+        prompt += f"\n\nCV:\n{cv_content}\n\nJob:\n{job_description}\n"
+        prompt += "\nResponde SOLO con JSON válido."
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+        
+        payload = {
+            "model": "deepseek-chat",
+            "messages": [
+                {"role": "system", "content": "Eres un asistente experto en reclutamiento."},
+                {"role": "user", "content": prompt}
+            ],
+            "stream": False
+        }
+
         try:
-            from openai import OpenAI
-            client = OpenAI(api_key=self.settings.openai_api_key)
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            text = data['choices'][0]['message']['content']
             
-            prompt = (
-                "Eres un asistente de carrera profesional. "
-                "Recibe el texto del CV y la descripción de una vacante. "
-                "Devuelve un JSON con match_score, matching_skills, suggested_rewrites, "
-                "section_order y summary_punchline."
-            )
-            prompt += f"\n\nCV:\n{cv_content}\n\nJob:\n{job_description}\n\n"
-            prompt += "Responde solo con JSON válido. No incluyas explicaciones adicionales."
-
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role":"system","content":prompt}],
-                max_tokens=700,
-                temperature=0.3
-            )
-            text = response.choices[0].message.content
-        except ImportError:
-            # Legacy v0.28
-            import openai
-            openai.api_key = self.settings.openai_api_key
-            # (Logic remains same as user provided)
-            response = openai.ChatCompletion.create(
-                model="gpt-4o-mini",
-                messages=[{"role":"system","content":prompt}],
-                max_tokens=700,
-                temperature=0.3
-            )
-            text = response.choices[0].message.content
-
-        import json
-        return json.loads(text)
+            # Limpiar posibles bloques de código markdown
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0].strip()
+            
+            return json.loads(text)
+        except Exception as e:
+            print(f"DeepSeek Error: {e}")
+            return self._optimize_mock(cv_content, job_description)
 
     def _optimize_mock(self, cv_content, job_description):
-        time.sleep(1.5)
         return {
-            "match_score": 92,
-            "matching_skills": ["B2B Sales", "Fintech Consulting", "Digital Payments", "Account Management"],
+            "match_score": 90,
+            "matching_skills": ["GTM Strategy", "Fintech Sales", "B2B Payments"],
             "suggested_rewrites": [
                 {
-                    "original": "Managed portfolio of clients.",
-                    "rewritten": "Strategically managed a high-value portfolio of 80+ B2B clients in Fintech, driving a 35% increase in acquisition."
+                    "original": "Managed sales team.",
+                    "rewritten": "Led high-performance GTM teams in the Fintech sector, achieving a 40% growth in payment processing volume."
                 }
             ],
-            "section_order": ["Professional Summary", "Experience", "Education"],
-            "summary_punchline": "Results-driven Fintech Sales Leader with deep expertise in digital payment ecosystems across México y LATAM."
+            "summary_punchline": "Líder estratégico de ventas con enfoque en infraestructura de pagos y crecimiento regional."
         }
