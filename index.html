@@ -118,33 +118,35 @@ function score(job){
   const t = (job.title+" "+job.company+" "+(job.tags||[]).join(" ")+" "+(job.location||"")).toLowerCase();
   let s=6;
   KW.forEach(k=>{if(t.includes(k))s+=0.45});
+  // Bonus perfil Antifraude/Riesgo (Tu Niche)
+  if(/fraud|antifraude|riesgo|risk|compliance|kyc|aml/.test(t))s+=2.0;
   if(t.includes("mexico")||t.includes("méxico"))s+=1.5;
   if(t.includes("latam")||t.includes("latin america"))s+=1.2;
   if(t.includes("remote")||t.includes("remoto")||t.includes("worldwide"))s+=0.8;
-  if(t.includes("head")||t.includes("general manager")||t.includes("director")||t.includes("vp"))s+=0.8;
+  if(/head|general manager|director|vp|senior/.test(t))s+=0.8;
   return Math.min(s,10).toFixed(1);
 }
 
 function analysis(job){
   const t=(job.title||"").toLowerCase();
+  const c=(job.company||"").toLowerCase();
   const pros=[],cons=[];
-  if(/head|general manager|director|regional|vp/.test(t))pros.push("Nivel liderazgo alineado a tu seniority");
-  if(/sales|business dev|growth|commercial/.test(t))pros.push("Rol comercial B2B — tu zona de dominio");
-  if(/payment|fintech|crypto|fx|acquiring/.test(t))pros.push("Industria pagos/Fintech — expertise directo");
-  if(/latam|mexico|remote/.test(t))pros.push("Cobertura LATAM/México remoto — tu red activable");
-  if(/fraud|antifraude|risk|kyc/.test(t))pros.push("Antifraude/Risk — área de alto valor en tu perfil");
-  if(/gtm|enablement|revenue|partner/.test(t))pros.push("GTM/Partnerships — tu fortaleza diferenciadora");
-  while(pros.length<2)pros.push("Valida el fit con la JD completa");
-  if(/junior|associate|analyst/.test(t))cons.push("Posible sub-nivel vs tu experiencia");
-  else cons.push("Alta competencia de candidatos regionales");
-  cons.push("Confirma disponibilidad del rol antes de aplicar");
-  const strat=/general manager|country manager/.test(t)
-    ?"Presenta un plan de 90 días para el mercado mexicano usando datos de Clip/Fiserv como benchmark."
-    :/fraud|risk/.test(t)
-    ?"Destaca reducción de chargebacks y gestión de riesgo operacional en Fintech."
-    :/gtm|enablement/.test(t)
-    ?"Muestra métricas: reducción de ciclo de ventas y aumento en win rate."
-    :"Conecta primero con el Hiring Manager en LinkedIn mencionando tu red Fintech MX.";
+  
+  if(/fraud|antifraude|risk|riesgo/.test(t)) pros.push("Match directo con tu especialidad en Prevención de Fraude");
+  if(/sales|business dev|commercial|revenue/.test(t)) pros.push("Aprovecha tu track record de 40% growth en Fiserv/Clip");
+  if(c.includes("amazon")||c.includes("global payments")) pros.push("Empresa Tier 1: Valida tu experiencia en adquirencia enterprise");
+  pros.push("Tu plataforma NERV es el 'hook' perfecto para esta vertical");
+
+  if(/junior|associate/.test(t)) cons.push("Posible sub-nivel para tu seniority");
+  else cons.push("Requiere red de contactos C-Level (usa tus 500+ contactos)");
+  cons.push("Mercado altamente competitivo en este Q2 2026");
+
+  const strat = /fraud|antifraude|risk/.test(t)
+    ? "Usa NERV para mostrarles un mapa del riesgo fintech en LATAM que ellos no tienen. Tu pitch: 'No solo vendo el software, entiendo el ecosistema de 3,000+ players'."
+    : /partner|partnership/.test(t)
+    ? "Menciona tu comunidad de 500+ líderes de pagos. Eres un 'Partner Manager' que ya trae los partners en el bolsillo."
+    : "Destaca tu gestión de carteras de $2M MXN en Fiserv. Eres un perfil que sabe manejar volumen y complejidad técnica.";
+
   return {pros:pros.slice(0,3),cons:cons.slice(0,2),strat};
 }
 
