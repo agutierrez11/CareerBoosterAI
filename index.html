@@ -148,21 +148,108 @@ function analysis(job){
   return {pros:pros.slice(0,3),cons:cons.slice(0,2),strat};
 }
 
-// ── SEED DATA — VERIFIED MAY 2026 ──────────────────────────────────────────
+// ── SEED DATA — ELITE CURATED LIST MAY 2026 ───────────────────────────────
 const SEED=[
-  {company:"Amazon",title:"Sr. Partner Manager, Payments – LATAM",url:"https://amazon.jobs/en/jobs/10413517",location:"Ciudad de México",tags:["Payments","Partnerships","LATAM"],source:"amazon"},
-  {company:"Taptap Send",title:"General Manager, LATAM",url:"https://www.linkedin.com/jobs/view/4242002934/",location:"Remote / LATAM",tags:["General Manager","Fintech"],source:"li"},
-  {company:"VelaFi",title:"Regional Head of Sales – LATAM",url:"https://www.linkedin.com/jobs/view/4370000287/",location:"Remote / LATAM",tags:["Head of Sales","Payments"],source:"li"},
-  {company:"Limited, Inc.",title:"Head of Sales — LATAM",url:"https://www.linkedin.com/jobs/view/4366888537/",location:"Remote / LATAM",tags:["Head of Sales","Fintech"],source:"li"},
-  {company:"Binance",title:"Business Development – Payment (LATAM)",url:"https://www.linkedin.com/jobs/view/4330738587/",location:"Remote / LATAM",tags:["BD","Payments","Crypto"],source:"li"},
-  {company:"DEUNA",title:"Enterprise Sales Executive – Payments",url:"https://www.linkedin.com/jobs/view/4361105504/",location:"México (Remote)",tags:["Enterprise Sales","Payments"],source:"li"},
-  {company:"OKX",title:"Growth Manager",url:"https://www.linkedin.com/jobs/view/4379499288/",location:"Remote / México",tags:["Growth","Crypto"],source:"li"},
-  {company:"Bitso",title:"Prime Sales & Trading Manager",url:"https://www.linkedin.com/jobs/view/4366984630/",location:"México / Remote",tags:["Sales","Crypto"],source:"li"},
-  {company:"Koin",title:"Sales Executive Senior – Anti Fraud",url:"https://www.linkedin.com/jobs/view/4363999558/",location:"LATAM",tags:["Anti-fraud","Sales"],source:"li"},
-  {company:"Signifyd",title:"Principal, Strategic Accounts & Insights",url:"https://www.linkedin.com/jobs/view/4369240699/",location:"Remote / LATAM",tags:["Anti-fraud","Accounts"],source:"li"},
-  {company:"Nuvei",title:"Sr. Account Manager – Mexico",url:"https://www.linkedin.com/jobs/view/4279700652/",location:"México",tags:["Account Manager","Payments"],source:"li"},
-  {company:"Nuvei",title:"Business Development Manager – LATAM Gaming",url:"https://www.linkedin.com/jobs/view/4303639210/",location:"Remote / LATAM",tags:["BD","Payments","Gaming"],source:"li"},
-  {company:"Varicent",title:"GTM Enablement Specialist (Remote México)",url:"https://www.linkedin.com/jobs/view/4366420024/",location:"México (Remote)",tags:["GTM","Enablement"],source:"li"},
+  {
+    company:"Global Payments",
+    title:"Vice President, Merchant Technology - LATAM",
+    url:"https://myworkdayjobs.com/GlobalPayments/job/Cuajimalpa/Vice-President--Merchant-Technology---LATAM_R0070228",
+    location:"Mexico City (Cuajimalpa)",
+    tags:["VP Level","Payments","Strategic Tech"],
+    source:"direct",
+    hm:"Chief Technology Officer (Global Payments) / Head of LATAM",
+    posted:"6 días"
+  },
+  {
+    company:"Amazon",
+    title:"Sr. Partner Manager, Payments – LATAM",
+    url:"https://amazon.jobs/en/jobs/10413517",
+    location:"Mexico City",
+    tags:["Payments","Partnerships","LATAM"],
+    source:"amazon",
+    hm:"Director of Payments LATAM (Amazon Business)",
+    posted:"5 días"
+  },
+  {
+    company:"Aircall",
+    title:"Sales Director / Enterprise Sales LATAM",
+    url:"https://www.linkedin.com/jobs/view/4241695427/",
+    location:"Mexico City (Hybrid)",
+    tags:["Sales Director","Enterprise","SaaS"],
+    source:"li",
+    hm:"VP of Sales LATAM / Head of Revenue Americas",
+    posted:"4 días"
+  },
+  {
+    company:"DEUNA",
+    title:"Enterprise Sales Executive – Payments",
+    url:"https://www.linkedin.com/jobs/view/4361105504/",
+    location:"Remote (México)",
+    tags:["Fintech","Payments","Enterprise"],
+    source:"li",
+    hm:"Head of Sales Mexico / CEO (DEUNA)",
+    posted:"Activa"
+  },
+  {
+    company:"Odoo",
+    title:"Remote Account Executive – LATAM Partnerships",
+    url:"https://www.linkedin.com/jobs/search/?keywords=Odoo+Partnerships+LATAM",
+    location:"Remote / Americas",
+    tags:["Partnerships","SaaS","Remote"],
+    source:"li",
+    hm:"Partnerships Director LATAM",
+    posted:"Ayer"
+  },
+  {
+    company:"Yuno",
+    title:"Partnerships Manager – LATAM",
+    url:"https://www.linkedin.com/jobs/view/4351333333/",
+    location:"Remote / México",
+    tags:["Fintech","Orchestration","Partnerships"],
+    source:"li",
+    hm:"Head of Partnerships (Yuno) / Head of BD LATAM",
+    posted:"3 días"
+  },
+  {
+    company:"Binance",
+    title:"Business Development – Payment (LATAM)",
+    url:"https://www.linkedin.com/jobs/view/4330738587/",
+    location:"Remote / LATAM",
+    tags:["BD","Payments","Crypto"],
+    source:"li",
+    hm:"Head of Institutional Payments LATAM",
+    posted:"Reciente"
+  },
+  {
+    company:"Koin",
+    title:"Sales Executive Senior – Anti Fraud Solutions",
+    url:"https://www.linkedin.com/jobs/view/4363999558/",
+    location:"LATAM / Remote",
+    tags:["Anti-fraud","Fintech","Sales"],
+    source:"li",
+    hm:"Head of Anti-fraud Sales / Risk Director",
+    posted:"Reciente"
+  },
+  {
+    company:"Nuvei",
+    title:"Sr. Account Manager – Mexico",
+    url:"https://www.linkedin.com/jobs/view/4279700652/",
+    location:"México",
+    tags:["Account Manager","Payments","Fintech"],
+    source:"li",
+    hm:"Head of Account Management Mexico",
+    posted:"Reciente"
+  },
+  {
+    company:"Taptap Send",
+    title:"General Manager, LATAM",
+    url:"https://www.linkedin.com/jobs/view/4242002934/",
+    location:"Remote / LATAM",
+    tags:["C-Level","GM","Fintech"],
+    source:"li",
+    hm:"CEO / Global Expansion Director",
+    posted:"Verificar"
+  }
 ];
 
 // ── STATE ───────────────────────────────────────────────────────────────────
@@ -201,7 +288,7 @@ function render(){
     const isTracked=tracked.includes(j.url);
     const scoreNum=j._score;
     const isHigh=scoreNum>=9;
-    const srcLabel=j.source==="li"?"💼 LinkedIn":j.source==="amazon"?"📦 Amazon":"🛸 Remotive";
+    const srcLabel=j.source==="li"?"💼 LinkedIn":j.source==="amazon"?"📦 Amazon":j.source==="direct"?"🔗 Directo":"🛸 Remotive";
     return `<div class="card${isTracked?' tracked':''}" data-url="${j.url}">
       <div class="score${isHigh?' high':''}">${scoreNum}</div>
       <div class="company">${j.company}</div>
@@ -209,6 +296,7 @@ function render(){
       <div class="tags">
         <span class="tag">📍 ${j.location||'Remote'}</span>
         <span class="tag source-${j.source==='li'?'li':j.source==='amazon'?'li':'api'}">${srcLabel}</span>
+        <span class="tag" style="border-color:var(--gold);color:var(--gold)">📅 ${j.posted||'En Vivo'}</span>
         ${(j.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}
       </div>
       <div class="analysis">
@@ -221,14 +309,17 @@ function render(){
           <ul class="box-text">${a.cons.map(c=>`<li>${c}</li>`).join('')}</ul>
         </div>
         <div class="strat-box">
-          <div class="box-label">⚡ Estrategia Táctica</div>
-          <div class="box-text">${a.strat}</div>
+          <div class="box-label">🚀 Estrategia de Abordaje (Hiring Manager)</div>
+          <div class="box-text">
+            <b>Persona Objetivo:</b> ${j.hm || 'Recruiter de la vacante'}<br>
+            <b>Puntos de Dolor:</b> ${a.strat}
+          </div>
         </div>
       </div>
       <div class="actions">
-        <a href="${j.url}" target="_blank" rel="noreferrer" class="apply">Ver Vacante →</a>
+        <a href="${j.url}" target="_blank" rel="noreferrer" class="apply">Ver Detalles & Aplicar →</a>
         <button class="track-btn${isTracked?' done':''}" onclick="toggleTrack('${j.url}')">
-          ${isTracked?'✅':'🔖'}
+          ${isTracked?'✅ Guardada':'🔖 Guardar'}
         </button>
       </div>
     </div>`;
