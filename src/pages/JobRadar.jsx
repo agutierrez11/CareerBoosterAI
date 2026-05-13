@@ -1,74 +1,102 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, AlertCircle, Zap, ExternalLink, BookmarkPlus, RefreshCw } from "lucide-react";
 
-// Análisis táctico basado en el perfil de Antonio
+//// ── Keywords exactos del perfil de Antonio ────────────────────────────────
+const PROFILE_KW = [
+  "sales", "business development", "payments", "fintech", "latam", "mexico",
+  "antifraude", "anti-fraud", "fraud", "crossborder", "cross-border", "acquiring",
+  "kyc", "aml", "gtm", "growth", "manager", "director", "head", "general manager",
+  "country manager", "commercial", "revenue", "account", "bdm", "bd",
+];
+
+const scoreJob = (job) => {
+  const text = `${job.title} ${job.company} ${job.tags?.join(" ") || ""} ${job.location || ""}`.toLowerCase();
+  let score = 6.0;
+  PROFILE_KW.forEach(kw => { if (text.includes(kw)) score += 0.45; });
+  if (text.includes("mexico") || text.includes("méxico")) score += 1.5;
+  if (text.includes("latam") || text.includes("latin america")) score += 1.2;
+  if (text.includes("remote") || text.includes("remoto") || text.includes("worldwide")) score += 0.8;
+  if (text.includes("head") || text.includes("general manager") || text.includes("director")) score += 0.8;
+  return Math.min(score, 10).toFixed(1);
+};
+
 const getAnalysis = (job) => {
   const title = (job.title || "").toLowerCase();
-  const company = (job.company_name || job.company || "").toLowerCase();
-  
   const pros = [];
   const cons = [];
-  
-  if (title.includes("manager") || title.includes("director") || title.includes("lead")) pros.push("Nivel de seniority alineado a tu experiencia");
-  if (title.includes("sales") || title.includes("business") || title.includes("commercial")) pros.push("Rol comercial B2B — tu zona de dominio");
-  if (title.includes("fintech") || title.includes("payment") || title.includes("crypto")) pros.push("Industria Fintech — expertise directo aplicable");
-  if (title.includes("latam") || title.includes("mexico") || title.includes("remote")) pros.push("Cobertura regional LATAM — red de contactos activable");
-  if (title.includes("product")) pros.push("Rol de producto con impacto en go-to-market");
 
-  if (pros.length < 2) pros.push("Revisa si el rol requiere tu red de contactos en Fintech MX");
-  if (pros.length < 3) pros.push("Potencial para aportar experiencia en pagos digitales");
+  if (title.includes("head") || title.includes("general manager") || title.includes("director") || title.includes("regional")) pros.push("Nivel de liderazgo alineado a tu seniority");
+  if (title.includes("sales") || title.includes("business development") || title.includes("growth") || title.includes("commercial")) pros.push("Rol comercial B2B — tu zona de dominio");
+  if (title.includes("payment") || title.includes("fintech") || title.includes("crypto") || title.includes("fx")) pros.push("Industria de pagos/Fintech — expertise directo");
+  if (title.includes("latam") || title.includes("mexico") || title.includes("remote")) pros.push("Cobertura LATAM/México remoto — tu red activable");
+  if (title.includes("fraud") || title.includes("antifraude") || title.includes("risk") || title.includes("kyc")) pros.push("Antifraude/Risk — área de alto valor en tu perfil");
+  if (title.includes("gtm") || title.includes("enablement") || title.includes("revenue")) pros.push("GTM strategy — tu fortaleza diferenciadora");
+  if (pros.length < 2) pros.push("Revisión manual recomendada para validar el fit");
+  if (pros.length < 3) pros.push("Potencial de expansión de red de contactos Fintech");
 
-  if (title.includes("junior") || title.includes("associate")) cons.push("Posible sub-nivel vs tu experiencia actual");
+  if (title.includes("junior") || title.includes("associate") || title.includes("analyst")) cons.push("Posible sub-nivel vs tu experiencia actual");
   else cons.push("Alta competencia de candidatos regionales");
-  cons.push("Valida si el salario está alineado a expectativas $100k+ USD");
+  cons.push("Valida disponibilidad del rol — lista extraída hace 1-2 meses");
 
-  const strategy = title.includes("sales")
-    ? "Abre el proceso enviando un mensaje directo al VP of Sales. Menciona tu red en Clip/Fiserv como palanca inmediata."
-    : title.includes("product")
-    ? "Presenta un mini-caso de éxito en lanzamiento de producto de pagos en menos de 3 slides."
-    : "Conecta primero con el Recruiter en LinkedIn y menciona tu experiencia en expansión Fintech LATAM.";
+  const strategy =
+    title.includes("general manager") || title.includes("country manager")
+      ? "Presenta un plan de 90 días para el mercado mexicano. Usa datos de Clip/Fiserv como benchmark."
+      : title.includes("fraud") || title.includes("risk")
+      ? "Destaca tu experiencia en reducción de chargebacks y gestión de riesgo operacional en Fintech."
+      : title.includes("gtm") || title.includes("enablement")
+      ? "Muestra métricas concretas de habilitación comercial: reducción de ciclo de ventas, aumento en win rate."
+      : "Conecta primero en LinkedIn con el Hiring Manager mencionando tu red Fintech MX como diferenciador.";
 
   return { pros: pros.slice(0, 3), cons: cons.slice(0, 2), strategy };
 };
 
-const scoreJob = (job) => {
-  const text = `${job.title} ${job.tags?.join(" ") || ""} ${job.candidate_required_location || ""}`.toLowerCase();
-  let score = 6.0;
-  // Palabras clave de perfil GTM Fintech
-  const profileKw = ["fintech", "payments", "sales", "manager", "director", "b2b", "business development", "commercial", "growth", "acquiring", "kyc", "aml"];
-  profileKw.forEach(kw => { if (text.includes(kw)) score += 0.5; });
-  // Bonus extra por cobertura México/LATAM/Remoto — perfil Cancún
-  if (text.includes("mexico") || text.includes("méxico")) score += 1.5;
-  if (text.includes("latam") || text.includes("latin america")) score += 1.2;
-  if (text.includes("remote") || text.includes("remoto") || text.includes("worldwide")) score += 0.8;
-  return Math.min(score, 10).toFixed(1);
-};
+// ── Vacantes reales de LinkedIn — Curadas para el perfil de Antonio ───────
+const LINKEDIN_SEED = [
+  { company: "Taptap Send", title: "General Manager, LATAM", url: "https://www.linkedin.com/jobs/view/4242002934/", location: "Remote / LATAM", tags: ["General Manager", "LATAM", "Fintech"] },
+  { company: "VelaFi", title: "Regional Head of Sales – LATAM", url: "https://linkedin.com/jobs/view/4370000287/", location: "Remote / LATAM", tags: ["Head of Sales", "LATAM", "Payments"] },
+  { company: "Limited, Inc.", title: "Head of Sales — LATAM", url: "https://www.linkedin.com/jobs/view/4366888537/", location: "Remote / LATAM", tags: ["Head of Sales", "Fintech", "LATAM"] },
+  { company: "Binance", title: "Business Development - Payment (LATAM)", url: "https://www.linkedin.com/jobs/view/4330738587/", location: "Remote / LATAM", tags: ["BD", "Payments", "LATAM", "Crypto"] },
+  { company: "Rapyd", title: "Payment Methods Leader", url: "https://www.linkedin.com/jobs/view/4379956200/", location: "Remote", tags: ["Payments", "Leadership", "Fintech"] },
+  { company: "OKX", title: "Growth Manager", url: "https://linkedin.com/jobs/view/4379499288/", location: "Remote / Mexico", tags: ["Growth", "Crypto", "Fintech"] },
+  { company: "Solana Foundation", title: "Country Manager, Mexico – Crypto Card", url: "https://www.linkedin.com/jobs/view/4379547360/", location: "Mexico (Remote)", tags: ["Country Manager", "Crypto", "Mexico"] },
+  { company: "Tether.io", title: "Expansion Manager - Mexico (100% Remote)", url: "https://linkedin.com/jobs/view/4338949598/", location: "Mexico (Remote)", tags: ["Expansion", "Crypto", "Mexico", "Remote"] },
+  { company: "Nuvei", title: "Sr. Account Manager – Mexico", url: "https://www.linkedin.com/jobs/view/4279700652/", location: "Mexico", tags: ["Account Manager", "Payments", "Fintech"] },
+  { company: "Koin", title: "Sales Executive Senior – Anti Fraud Solutions", url: "https://www.linkedin.com/jobs/view/4363999558/", location: "LATAM", tags: ["Anti-fraud", "Sales", "Fintech"] },
+  { company: "Bitso", title: "Prime Sales & Trading Manager", url: "https://www.linkedin.com/jobs/view/4366984630/", location: "Mexico / Remote", tags: ["Sales", "Crypto", "Fintech"] },
+  { company: "Varicent", title: "GTM Enablement Specialist (Remote – Mexico)", url: "https://www.linkedin.com/jobs/view/4366420024/", location: "Mexico (Remote)", tags: ["GTM", "Enablement", "Revenue", "Remote"] },
+];
 
 export default function JobRadar() {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Semilla de LinkedIn visible inmediatamente sin esperar al backend
+  const seedEnriched = LINKEDIN_SEED.map(j => ({
+    ...j,
+    score: parseFloat(scoreJob(j)),
+    rationale: getAnalysis(j),
+  })).sort((a, b) => b.score - a.score);
+
+  const [jobs, setJobs] = useState(seedEnriched);
+  const [loading, setLoading] = useState(false);
   const [tracked, setTracked] = useState([]);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState("Curado · LinkedIn 2026");
 
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      // Apunta al backend proxy — funciona en localhost Y en Vercel
-      const res = await fetch(`/api/jobs?q=fintech+sales+manager+latam&location=mexico+remote`);
+      const res = await fetch(`/api/jobs?q=fintech+antifraude+crossborder+payments+latam&location=mexico+remote`);
       if (!res.ok) throw new Error("Backend error");
       const data = await res.json();
-      const enriched = data
-        .map(j => ({
-          ...j,
-          score: parseFloat(scoreJob(j)),
-          rationale: getAnalysis(j),
-        }))
+      // Combina LinkedIn curado + datos frescos del backend, sin duplicados
+      const seen = new Set(LINKEDIN_SEED.map(j => j.url));
+      const fresh = data
+        .filter(j => !seen.has(j.url))
+        .map(j => ({ ...j, score: parseFloat(scoreJob(j)), rationale: getAnalysis(j) }));
+      const combined = [...seedEnriched, ...fresh]
         .sort((a, b) => b.score - a.score)
-        .slice(0, 12);
-      setJobs(enriched);
-      setLastUpdated(new Date().toLocaleTimeString("es-MX"));
+        .slice(0, 20);
+      setJobs(combined);
+      setLastUpdated(`Live · ${new Date().toLocaleTimeString("es-MX")}`);
     } catch (e) {
-      console.error("Backend fetch failed:", e);
+      console.error("Backend fetch failed, keeping LinkedIn seed:", e);
     } finally {
       setLoading(false);
     }
