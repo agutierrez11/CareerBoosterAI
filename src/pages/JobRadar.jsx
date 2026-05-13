@@ -1,146 +1,224 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { CheckCircle, AlertCircle, Zap, ExternalLink, BookmarkPlus } from "lucide-react";
+import { CheckCircle, AlertCircle, Zap, ExternalLink, BookmarkPlus, RefreshCw } from "lucide-react";
+
+// Análisis táctico basado en el perfil de Antonio
+const getAnalysis = (job) => {
+  const title = (job.title || "").toLowerCase();
+  const company = (job.company_name || job.company || "").toLowerCase();
+  
+  const pros = [];
+  const cons = [];
+  
+  if (title.includes("manager") || title.includes("director") || title.includes("lead")) pros.push("Nivel de seniority alineado a tu experiencia");
+  if (title.includes("sales") || title.includes("business") || title.includes("commercial")) pros.push("Rol comercial B2B — tu zona de dominio");
+  if (title.includes("fintech") || title.includes("payment") || title.includes("crypto")) pros.push("Industria Fintech — expertise directo aplicable");
+  if (title.includes("latam") || title.includes("mexico") || title.includes("remote")) pros.push("Cobertura regional LATAM — red de contactos activable");
+  if (title.includes("product")) pros.push("Rol de producto con impacto en go-to-market");
+
+  if (pros.length < 2) pros.push("Revisa si el rol requiere tu red de contactos en Fintech MX");
+  if (pros.length < 3) pros.push("Potencial para aportar experiencia en pagos digitales");
+
+  if (title.includes("junior") || title.includes("associate")) cons.push("Posible sub-nivel vs tu experiencia actual");
+  else cons.push("Alta competencia de candidatos regionales");
+  cons.push("Valida si el salario está alineado a expectativas $100k+ USD");
+
+  const strategy = title.includes("sales")
+    ? "Abre el proceso enviando un mensaje directo al VP of Sales. Menciona tu red en Clip/Fiserv como palanca inmediata."
+    : title.includes("product")
+    ? "Presenta un mini-caso de éxito en lanzamiento de producto de pagos en menos de 3 slides."
+    : "Conecta primero con el Recruiter en LinkedIn y menciona tu experiencia en expansión Fintech LATAM.";
+
+  return { pros: pros.slice(0, 3), cons: cons.slice(0, 2), strategy };
+};
+
+const scoreJob = (job) => {
+  const text = `${job.title} ${job.tags?.join(" ") || ""} ${job.candidate_required_location || ""}`.toLowerCase();
+  let score = 6.0;
+  const keywords = ["fintech", "payments", "sales", "manager", "director", "latam", "mexico", "b2b", "remote", "business development", "commercial", "growth", "crypto"];
+  keywords.forEach(kw => { if (text.includes(kw)) score += 0.4; });
+  return Math.min(score, 10).toFixed(1);
+};
 
 export default function JobRadar() {
   const [jobs, setJobs] = useState([]);
-  const [query, setQuery] = useState("Sales Manager fintech mexico");
-  const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({ total_applications: 0, response_rate: "0%", active_interviews: 0 });
-
-  useEffect(() => {
-    fetchJobs();
-    fetchStats();
-  }, []);
+  const [loading, setLoading] = useState(true);
+  const [tracked, setTracked] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/jobs", {
-        params: { q: query, location: "Mexico" },
-      });
-      setJobs(res.data);
-    } catch (error) {
-      console.error("Radar Error:", error);
+      // API pública y gratuita de vacantes remotas en Fintech
+      const [r1, r2] = await Promise.allSettled([
+        fetch("https://remotive.com/api/remote-jobs?search=fintech+sales+manager&limit=20"),
+        fetch("https://remotive.com/api/remote-jobs?search=payments+director+latam&limit=10"),
+      ]);
+
+      let allJobs = [];
+      for (const result of [r1, r2]) {
+        if (result.status === "fulfilled" && result.value.ok) {
+          const data = await result.value.json();
+          allJobs = [...allJobs, ...(data.jobs || [])];
+        }
+      }
+
+      // Deduplicar y enriquecer con análisis táctico
+      const seen = new Set();
+      const enriched = allJobs
+        .filter(j => {
+          if (seen.has(j.id)) return false;
+          seen.add(j.id);
+          return true;
+        })
+        .map(j => ({
+          company: j.company_name,
+          title: j.title,
+          url: j.url,
+          location: j.candidate_required_location || "Remote",
+          score: parseFloat(scoreJob(j)),
+          rationale: getAnalysis(j),
+          salary: j.salary || null,
+          tags: j.tags?.slice(0, 4) || [],
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 12);
+
+      setJobs(enriched);
+      setLastUpdated(new Date().toLocaleTimeString("es-MX"));
+    } catch (e) {
+      console.error("Fetch error:", e);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
-    try {
-      const res = await axios.get("/api/stats");
-      setStats(res.data);
-    } catch (e) { console.log(e); }
-  };
+  useEffect(() => { fetchJobs(); }, []);
 
-  const trackJob = async (job) => {
-    try {
-      await axios.post("/api/track", {
-        company: job.company,
-        title: job.title,
-        url: job.url,
-        score: job.score,
-        rationale: job.rationale
-      });
-      alert("✅ Aplicación guardada en tu base de datos.");
-      fetchStats();
-    } catch (e) { alert("Error al trackear"); }
+  const trackJob = (job) => {
+    setTracked(prev => [...prev, job.url]);
   };
 
   return (
     <div className="min-h-screen pt-10 px-8 pb-32">
-      {/* HEADER SECTION */}
-      <div className="text-center mb-16">
+      {/* HERO */}
+      <div className="text-center mb-12">
         <h1 className="text-6xl font-black tracking-tight">
-          <span className="text-sky-400">Fintech</span> <span className="text-white">Job</span> <span className="text-amber-500">Radar</span>
+          <span className="text-sky-400">Fintech</span>{" "}
+          <span className="text-white">Job</span>{" "}
+          <span className="text-amber-500">Radar</span>
         </h1>
-        <p className="text-slate-400 text-xl mt-4 font-medium tracking-wide">
+        <p className="text-slate-400 text-xl mt-4 font-medium">
           Strategic Intelligence v2.0 — Antonio Gutiérrez Jiménez
         </p>
+        {lastUpdated && (
+          <p className="text-xs text-slate-600 mt-2">Actualizado: {lastUpdated}</p>
+        )}
       </div>
 
-      {/* STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-        <div className="stat-box">
-          <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold">Aplicaciones Realizadas</h3>
-          <div className="text-6xl font-black text-sky-400 mt-4">{stats.total_applications}</div>
-        </div>
-        <div className="stat-box">
-          <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold">Tasa de Respuesta</h3>
-          <div className="text-6xl font-black text-sky-400 mt-4">{stats.response_rate}</div>
-        </div>
-        <div className="stat-box">
-          <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold">Entrevistas Activas</h3>
-          <div className="text-6xl font-black text-sky-400 mt-4">{stats.active_interviews}</div>
-        </div>
-      </div>
-
-      {/* JOB GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {jobs.map((job, i) => (
-          <div key={i} className="ultimate-card group">
-            <div className="score-circle">{job.score || "8.5"}</div>
-            
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h3 className="text-3xl font-black text-sky-400 mb-1">{job.company}</h3>
-                <div className="text-xl font-bold text-white">{job.title}</div>
-              </div>
-            </div>
-
-            {/* ANALYSIS BOXES */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold mb-2 text-sm">
-                  <CheckCircle size={16} /> PROS
-                </div>
-                <ul className="text-xs text-slate-400 space-y-1">
-                  {(job.rationale?.pros || ["Seniority match", "Fintech expertise", "GTM background"]).map((p,idx) => (
-                    <li key={idx}>• {p}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-4">
-                <div className="flex items-center gap-2 text-rose-400 font-bold mb-2 text-sm">
-                  <AlertCircle size={16} /> CONTRAS
-                </div>
-                <ul className="text-xs text-slate-400 space-y-1">
-                  {(job.rationale?.cons || ["Competitive market", "Remote timezone"]).map((c,idx) => (
-                    <li key={idx}>• {c}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="bg-sky-500/5 border border-sky-500/10 rounded-2xl p-4 mb-8">
-              <div className="flex items-center gap-2 text-sky-400 font-bold mb-2 text-sm uppercase tracking-tighter">
-                <Zap size={16} /> Estrategia de Abordaje
-              </div>
-              <p className="text-xs text-slate-300 italic">
-                "{job.rationale?.strategy || "Contactar al Hiring Manager enfocándote en tu experiencia escalando startups de pagos."}"
-              </p>
-            </div>
-
-            <div className="flex gap-4">
-              <a 
-                href={job.url} 
-                target="_blank" 
-                className="flex-1 flex items-center justify-center gap-2 bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-black py-4 rounded-2xl font-bold transition-all border border-sky-500/20"
-              >
-                Ir a Vacante <ExternalLink size={18} />
-              </a>
-              <button 
-                onClick={() => trackJob(job)}
-                className="px-6 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl border border-white/5 transition-all"
-                title="Track Application"
-              >
-                <BookmarkPlus size={22} />
-              </button>
-            </div>
+      {/* STATS */}
+      <div className="grid grid-cols-3 gap-8 mb-12">
+        {[
+          { label: "Vacantes en Vivo", value: loading ? "..." : jobs.length },
+          { label: "Elite Matches (9+)", value: loading ? "..." : jobs.filter(j => j.score >= 9).length },
+          { label: "Trackeadas", value: tracked.length },
+        ].map((s, i) => (
+          <div key={i} className="stat-box">
+            <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold">{s.label}</h3>
+            <div className="text-6xl font-black text-sky-400 mt-4">{s.value}</div>
           </div>
         ))}
       </div>
+
+      {/* REFRESH BUTTON */}
+      <div className="flex justify-end mb-8">
+        <button
+          onClick={fetchJobs}
+          disabled={loading}
+          className="flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 px-5 py-3 rounded-full text-sm font-bold transition-all"
+        >
+          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          {loading ? "Escaneando mercado..." : "Actualizar Radar"}
+        </button>
+      </div>
+
+      {/* LOADING STATE */}
+      {loading && (
+        <div className="text-center py-32 text-slate-500">
+          <div className="text-5xl mb-6">🛰️</div>
+          <p className="text-lg">Escaneando oportunidades en tiempo real...</p>
+        </div>
+      )}
+
+      {/* JOB GRID */}
+      {!loading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {jobs.map((job, i) => (
+            <div key={i} className="ultimate-card group">
+              <div className="score-circle">{job.score}</div>
+
+              <h3 className="text-2xl font-black text-sky-400 mb-1 pr-16">{job.company}</h3>
+              <div className="text-base font-bold text-white mb-1">{job.title}</div>
+              <div className="text-xs text-slate-500 mb-4">📍 {job.location}</div>
+
+              {job.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {job.tags.map((tag, ti) => (
+                    <span key={ti} className="text-xs bg-white/5 border border-white/5 px-3 py-1 rounded-full text-slate-400">{tag}</span>
+                  ))}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-3">
+                  <div className="flex items-center gap-1 text-emerald-400 font-bold mb-2 text-xs uppercase">
+                    <CheckCircle size={12} /> Por qué SÍ
+                  </div>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                    {job.rationale.pros.map((p, idx) => <li key={idx}>• {p}</li>)}
+                  </ul>
+                </div>
+                <div className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-3">
+                  <div className="flex items-center gap-1 text-rose-400 font-bold mb-2 text-xs uppercase">
+                    <AlertCircle size={12} /> Por qué NO
+                  </div>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                    {job.rationale.cons.map((c, idx) => <li key={idx}>• {c}</li>)}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-sky-500/5 border border-sky-500/10 rounded-2xl p-4 mb-5">
+                <div className="flex items-center gap-1 text-sky-400 font-bold mb-1 text-xs uppercase">
+                  <Zap size={12} /> Estrategia Táctica
+                </div>
+                <p className="text-xs text-slate-300 italic">"{job.rationale.strategy}"</p>
+              </div>
+
+              <div className="flex gap-3">
+                <a
+                  href={job.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-black py-4 rounded-2xl font-bold transition-all border border-sky-500/20 text-sm"
+                >
+                  Ver Vacante <ExternalLink size={16} />
+                </a>
+                <button
+                  onClick={() => trackJob(job)}
+                  disabled={tracked.includes(job.url)}
+                  className={`px-5 rounded-2xl border transition-all ${
+                    tracked.includes(job.url)
+                      ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+                      : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-white/5"
+                  }`}
+                >
+                  {tracked.includes(job.url) ? <CheckCircle size={20} /> : <BookmarkPlus size={20} />}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
