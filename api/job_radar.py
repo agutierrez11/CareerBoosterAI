@@ -2,8 +2,13 @@ import re
 import requests
 import os
 import json
+import sys
 from typing import Any
-from api.config import settings
+
+# Add current directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from config import settings
 
 class JobRadar:
     def __init__(self, settings):
@@ -40,7 +45,7 @@ class JobRadar:
 
         analyzed_jobs = []
         try:
-            from api.optimizer import ApplicationOptimizer
+            from optimizer import ApplicationOptimizer
             optimizer = ApplicationOptimizer(self.settings)
             for job in raw_jobs[:10]:
                 analysis = optimizer.analyze_match("Antonio Jiménez - Expert in Fintech GTM", job.get('description', ''))
@@ -60,6 +65,7 @@ class JobRadar:
         live_jobs = []
         live_jobs.extend(self._search_remotive(query, location))
         live_jobs.extend(self._search_jobleads(query, location))
+        live_jobs.extend(self._search_google_jobs(query, location))
         return live_jobs
 
     def _search_jobleads(self, query=None, location=None):
@@ -86,9 +92,51 @@ class JobRadar:
         try:
             res = requests.get(self.remotive_url, timeout=10)
             data = res.json().get("jobs", [])
-            return [{"company": j['company_name'], "title": j['title'], "url": j['url'], "description": j['description']} for j in data[:10]]
+            return [{"company": j['company_name'], "title": j['title'], "url": j['url'], "description": j['description'], "source": "Remotive"} for j in data[:10]]
         except: return []
+
+    def _search_google_jobs(self, query=None, location=None):
+        jobs = []
+        # Buscar en Google para LinkedIn, Glassdoor, Indeed, etc.
+        search_terms = [
+            f'site:linkedin.com/jobs "{query or "fintech sales"}" "{location or "Mexico"}"',
+            f'site:glassdoor.com "{query or "payments director"}" "{location or "LATAM"}"',
+            f'site:indeed.com "{query or "business development"}" "{location or "remote"}"',
+        ]
+        
+        for term in search_terms:
+            try:
+                # Usar el servicio de scraping para Google
+                google_url = f"https://www.google.com/search?q={requests.utils.requote_uri(term)}&num=10"
+                scrape_url = f"http://api.scrape.do?token={self.settings.scrape_do_token}&url={google_url}"
+                res = requests.get(scrape_url, timeout=15)
+                if res.status_code == 200:
+                    from bs4 import BeautifulSoup
+                    soup = BeautifulSoup(res.text, 'html.parser')
+                    for link in soup.find_all('a', href=True):
+                        href = link['href']
+                        if 'linkedin.com/jobs' in href or 'glassdoor.com' in href or 'indeed.com' in href:
+                            title = link.get_text().strip() or "Vacante encontrada"
+                            jobs.append({
+                                "company": "Empresa externa",
+                                "title": title[:100],
+                                "url": href if href.startswith('http') else f"https://www.google.com{href}",
+                                "description": f"Vacante encontrada en búsqueda de {term.split('site:')[1].split()[0]}",
+                                "source": term.split('site:')[1].split()[0].replace('.com', '').title()
+                            })
+            except Exception as e:
+                print(f"Google search failed for {term}: {e}")
+        
+        return jobs[:15]
 
     def save_results(self, jobs):
         with open(self.data_path, 'w', encoding='utf-8') as f:
             json.dump(jobs, f, indent=2, ensure_ascii=False)
+
+
+if __name__ == "__main__":
+    from api.config import settings
+    radar = JobRadar(settings)
+    jobs = radar.search_jobs()
+    radar.save_results(jobs)
+    print(f"Found {len(jobs)} jobs and saved to {radar.data_path}")

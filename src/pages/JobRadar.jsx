@@ -48,17 +48,17 @@ export default function JobRadar() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      // API pública y gratuita de vacantes remotas en Fintech
+      // Usar el backend propio en lugar de Remotive directo
       const [r1, r2] = await Promise.allSettled([
-        fetch("https://remotive.com/api/remote-jobs?search=fintech+sales+manager&limit=20"),
-        fetch("https://remotive.com/api/remote-jobs?search=payments+director+latam&limit=10"),
+        fetch("/api/jobs?q=fintech+sales+manager&location=Mexico"),
+        fetch("/api/jobs?q=payments+director+latam&location=LATAM"),
       ]);
 
       let allJobs = [];
       for (const result of [r1, r2]) {
         if (result.status === "fulfilled" && result.value.ok) {
           const data = await result.value.json();
-          allJobs = [...allJobs, ...(data.jobs || [])];
+          allJobs = [...allJobs, ...(data || [])];
         }
       }
 
@@ -66,19 +66,20 @@ export default function JobRadar() {
       const seen = new Set();
       const enriched = allJobs
         .filter(j => {
-          if (seen.has(j.id)) return false;
-          seen.add(j.id);
+          if (seen.has(j.url)) return false;
+          seen.add(j.url);
           return true;
         })
         .map(j => ({
-          company: j.company_name,
+          company: j.company,
           title: j.title,
           url: j.url,
-          location: j.candidate_required_location || "Remote",
-          score: parseFloat(scoreJob(j)),
-          rationale: getAnalysis(j),
+          location: j.location || "Remote",
+          score: parseFloat(j.score || scoreJob(j)),
+          rationale: j.rationale || getAnalysis(j),
           salary: j.salary || null,
-          tags: j.tags?.slice(0, 4) || [],
+          tags: j.tags || [],
+          source: j.source || "Unknown",
         }))
         .sort((a, b) => b.score - a.score)
         .slice(0, 12);
