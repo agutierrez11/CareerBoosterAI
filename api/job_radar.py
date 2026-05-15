@@ -21,7 +21,7 @@ class JobRadar:
             "kyc", "aml", "risk", "digital payments", "market intelligence"
         ]
         self.location_keywords = ["mexico", "latam", "remote", "latinoamerica", "cancun"]
-        self.data_path = os.path.join(os.path.dirname(__file__), "data", "active_vacancies.json")
+        self.data_path = os.path.join(os.path.dirname(__file__), "active_vacancies.json")
 
     def load_local_jobs(self):
         if os.path.exists(self.data_path):
