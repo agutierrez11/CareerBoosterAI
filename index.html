@@ -338,44 +338,34 @@ async function scanLive(){
   document.getElementById("statSource").textContent="🛰️ Escaneando ecosistema LATAM...";
 
   try{
-    // Queries optimizadas para tu perfil
-    const queries=[
-      "fintech sales manager mexico",
-      "payments director latam",
-      "antifraude",
-      "risk manager payments",
-      "account executive fintech"
-    ];
+    // Llamada al backend que integra múltiples fuentes
+    const response = await fetch('/api/jobs?q=fintech%20sales%20manager%20mexico&location=Mexico%20remote');
+    if (!response.ok) throw new Error('Backend error');
+    const backendJobs = await response.json();
     
-    // Llamada paralela a la API de Remotive (Punto de partida)
-    const results=await Promise.allSettled(queries.map(q=>
-      fetch(`https://remotive.io/api/remote-jobs?search=${encodeURIComponent(q)}&limit=15`).then(r=>r.json())
-    ));
-
-    const fresh=[];
-    const existingUrls=new Set(SEED.map(j=>j.url));
+    const fresh = [];
+    const existingUrls = new Set(SEED.map(j => j.url));
     
-    results.forEach(r=>{
-      if(r.status==="fulfilled"&&r.value.jobs){
-        r.value.jobs.forEach(j=>{
-          if(!existingUrls.has(j.url)){
-            fresh.push({
-              company:j.company_name,
-              title:j.title,
-              url:j.url,
-              location:j.candidate_required_location || "Remote",
-              tags:j.tags || [],
-              source:"api",
-              posted: "Recién detectada"
-            });
-            existingUrls.add(j.url);
-          }
+    backendJobs.forEach(j => {
+      if (!existingUrls.has(j.url)) {
+        fresh.push({
+          company: j.company,
+          title: j.title,
+          url: j.url,
+          location: j.location || "Remote",
+          tags: j.tags || [],
+          source: j.source || "api",
+          posted: "Recién detectada",
+          _score: j.score || 8.0
         });
+        existingUrls.add(j.url);
       }
     });
-    allJobs=[...SEED,...fresh].map(j=>({...j,_score:parseFloat(score(j))})).sort((a,b)=>b._score-a._score);
+    
+    allJobs = [...SEED, ...fresh].map(j => ({...j, _score: j._score || parseFloat(score(j))})).sort((a,b)=>b._score-a._score);
     document.getElementById("statSource").textContent=`✅ Live · ${fresh.length} nuevas`;
   }catch(e){
+    console.error('Scan failed:', e);
     document.getElementById("statSource").textContent="⚠️ Curado solo";
   }finally{
     btn.disabled=false;
