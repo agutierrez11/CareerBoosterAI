@@ -1,13 +1,395 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fintech Job Radar — Antonio Gutiérrez</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020617;--card:rgba(15,23,42,0.85);--sky:#38bdf8;--gold:#f59e0b;--text:#f8fafc;--dim:#94a3b8;--green:#10b981;--rose:#f43f5e;--border:rgba(255,255,255,0.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;background-image:radial-gradient(circle at 10% 20%,rgba(56,189,248,.07) 0%,transparent 40%),radial-gradient(circle at 90% 80%,rgba(245,158,11,.05) 0%,transparent 40%);background-attachment:fixed}
+.hero{height:360px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 20px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.15;z-index:0}
+.hero-content{position:relative;z-index:1}
+.hero h1{font-size:3.5rem;font-weight:800;background:linear-gradient(to right,var(--sky),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-2px}
+.hero p{color:var(--dim);font-size:1.2rem;margin-top:12px}
+.container{max-width:1400px;margin:0 auto;padding:40px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:40px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;text-align:center;backdrop-filter:blur(20px)}
+.stat h3{font-size:.8rem;color:var(--dim);text-transform:uppercase;letter-spacing:2px}
+.stat .val{font-size:2.8rem;font-weight:800;color:var(--sky);margin-top:8px}
+.toolbar{display:flex;gap:16px;align-items:center;margin-bottom:32px;flex-wrap:wrap}
+.toolbar h2{font-size:1.4rem;font-weight:700;flex:1}
+input#search{background:var(--card);border:1px solid var(--border);padding:12px 24px;border-radius:16px;color:white;font-family:inherit;font-size:1rem;outline:none;width:280px;transition:.3s}
+input#search:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(56,189,248,.1)}
+.btn{display:flex;align-items:center;gap:8px;padding:12px 24px;border-radius:16px;border:none;cursor:pointer;font-family:inherit;font-size:.95rem;font-weight:700;transition:.3s}
+.btn-sky{background:rgba(56,189,248,.1);color:var(--sky);border:1px solid rgba(56,189,248,.3)}
+.btn-sky:hover{background:var(--sky);color:#020617}
+.btn-sky:disabled{opacity:.5;cursor:not-allowed}
+.spin{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.banner{background:linear-gradient(90deg,rgba(56,189,248,.08),rgba(245,158,11,.08));border:1px solid rgba(56,189,248,.3);padding:20px 28px;border-radius:18px;margin-bottom:32px;display:flex;align-items:center;gap:16px}
+.banner-icon{font-size:2rem}
+.banner h4{color:var(--sky);font-size:1rem;margin-bottom:4px}
+.banner p{color:var(--dim);font-size:.9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:28px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:26px;padding:32px;display:flex;flex-direction:column;transition:all .4s cubic-bezier(.175,.885,.32,1.275);position:relative;overflow:hidden;backdrop-filter:blur(20px)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(to right,var(--sky),var(--gold));opacity:.25}
+.card:hover{transform:translateY(-10px);border-color:var(--sky);box-shadow:0 25px 50px rgba(0,0,0,.4)}
+.card.tracked{border-color:var(--green);box-shadow:0 0 0 1px rgba(16,185,129,.2)}
+.score{position:absolute;top:28px;right:28px;background:rgba(15,23,42,.9);border:1px solid var(--gold);color:var(--gold);padding:8px 16px;border-radius:14px;font-weight:800;font-size:1.2rem}
+.score.high{border-color:var(--sky);color:var(--sky)}
+.company{font-size:1.7rem;font-weight:800;color:var(--sky);margin-bottom:6px;padding-right:80px}
+.role{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:16px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.tag{background:rgba(255,255,255,.04);border:1px solid var(--border);padding:5px 12px;border-radius:10px;font-size:.8rem;color:var(--dim)}
+.tag.source-li{border-color:rgba(56,189,248,.3);color:var(--sky)}
+.tag.source-api{border-color:rgba(16,185,129,.3);color:var(--green)}
+.analysis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.pro-box,.con-box,.strat-box{border-radius:14px;padding:14px}
+.pro-box{background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2)}
+.con-box{background:rgba(244,63,94,.05);border:1px solid rgba(244,63,94,.2)}
+.strat-box{background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.15);grid-column:1/-1;margin-bottom:4px}
+.box-label{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.pro-box .box-label{color:var(--green)}
+.con-box .box-label{color:var(--rose)}
+.strat-box .box-label{color:var(--sky)}
+.box-text{font-size:.82rem;color:var(--dim);line-height:1.5}
+.box-text li{list-style:none;margin-bottom:3px}
+.box-text li::before{content:'• ';color:inherit}
+.actions{display:flex;gap:12px;margin-top:auto;padding-top:16px}
+.apply{flex:1;display:block;text-align:center;background:linear-gradient(135deg,var(--sky),#0ea5e9);color:#020617;text-decoration:none;padding:14px;border-radius:16px;font-weight:800;transition:.3s;font-size:.9rem;letter-spacing:.5px}
+.apply:hover{box-shadow:0 12px 28px rgba(56,189,248,.35);transform:scale(1.02)}
+.track-btn{padding:14px 20px;border-radius:16px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);cursor:pointer;font-family:inherit;font-size:1rem;transition:.3s}
+.track-btn:hover{border-color:var(--green);color:var(--green)}
+.track-btn.done{background:rgba(16,185,129,.1);border-color:var(--green);color:var(--green)}
+.empty{text-align:center;padding:80px 20px;color:var(--dim)}
+.empty .icon{font-size:4rem;margin-bottom:16px}
+footer{text-align:center;padding:50px 20px;color:var(--dim);font-size:.85rem;border-top:1px solid var(--border);margin-top:60px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2070" alt="">
+  <div class="hero-content">
+    <h1>Fintech Job Radar</h1>
+    <p>Strategic Intelligence — Antonio Gutiérrez Jiménez · Cancún 🇲🇽 · Remote LATAM</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="stats">
+    <div class="stat"><h3>Vacantes en Radar</h3><div class="val" id="statTotal">—</div></div>
+    <div class="stat"><h3>Elite Matches (9+)</h3><div class="val" id="statElite">—</div></div>
+    <div class="stat"><h3>Trackeadas</h3><div class="val" id="statTracked">—</div></div>
+    <div class="stat"><h3>Fuente en Vivo</h3><div class="val" style="font-size:1.4rem;margin-top:12px" id="statSource">⏳</div></div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-icon">🛰️</div>
+    <div>
+      <h4>Radar Activo — Cacería en Vivo + Curado Mayo 2026</h4>
+      <p>Vacantes verificadas de LinkedIn/Amazon + búsqueda en tiempo real de Remotive API. Mercado: Fintech · Pagos · Antifraude · LATAM · Remoto desde Cancún.</p>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <h2>🎯 Oportunidades de Alto Impacto</h2>
+    <input id="search" type="text" placeholder="Buscar empresa o rol...">
+    <button class="btn btn-sky" id="scanBtn" onclick="scanLive()">
+      <span id="scanIcon">🔄</span> Escanear Ahora
+    </button>
+  </div>
+
+  <div class="grid" id="grid">
+    <div class="empty"><div class="icon">🛰️</div><p>Cargando radar...</p></div>
+  </div>
+</div>
+
+<footer>Fintech Job Radar © 2026 — Antigravity AI · Antonio Gutiérrez Jiménez</footer>
+
+<script>
+// ── KEYWORDS & SCORING ──────────────────────────────────────────────────────
+const KW = ["sales","bd","business development","payments","fintech","latam","mexico","antifraude","fraud","crossborder","acquiring","gtm","growth","manager","director","head","country manager","commercial","revenue","account","partnership","partner"];
+
+function score(job){
+  const t = (job.title+" "+job.company+" "+(job.tags||[]).join(" ")+" "+(job.location||"")).toLowerCase();
+  let s=6;
+  KW.forEach(k=>{if(t.includes(k))s+=0.45});
+  // Bonus perfil Antifraude/Riesgo (Tu Niche)
+  if(/fraud|antifraude|riesgo|risk|compliance|kyc|aml/.test(t))s+=2.0;
+  if(t.includes("mexico")||t.includes("méxico"))s+=1.5;
+  if(t.includes("latam")||t.includes("latin america"))s+=1.2;
+  if(t.includes("remote")||t.includes("remoto")||t.includes("worldwide"))s+=0.8;
+  if(/head|general manager|director|vp|senior/.test(t))s+=0.8;
+  return Math.min(s,10).toFixed(1);
+}
+
+function analysis(job){
+  const t=(job.title||"").toLowerCase();
+  const c=(job.company||"").toLowerCase();
+  const pros=[],cons=[];
+  
+  if(/fraud|antifraude|risk|riesgo/.test(t)) pros.push("Match directo con tu especialidad en Prevención de Fraude");
+  if(/sales|business dev|commercial|revenue/.test(t)) pros.push("Aprovecha tu track record de 40% growth en Fiserv/Clip");
+  if(c.includes("amazon")||c.includes("global payments")) pros.push("Empresa Tier 1: Valida tu experiencia en adquirencia enterprise");
+  pros.push("Tu plataforma NERV es el 'hook' perfecto para esta vertical");
+
+  if(/junior|associate/.test(t)) cons.push("Posible sub-nivel para tu seniority");
+  else cons.push("Requiere red de contactos C-Level (usa tus 500+ contactos)");
+  cons.push("Mercado altamente competitivo en este Q2 2026");
+
+  const strat = /fraud|antifraude|risk/.test(t)
+    ? "Usa NERV para mostrarles un mapa del riesgo fintech en LATAM que ellos no tienen. Tu pitch: 'No solo vendo el software, entiendo el ecosistema de 3,000+ players'."
+    : /partner|partnership/.test(t)
+    ? "Menciona tu comunidad de 500+ líderes de pagos. Eres un 'Partner Manager' que ya trae los partners en el bolsillo."
+    : "Destaca tu gestión de carteras de $2M MXN en Fiserv. Eres un perfil que sabe manejar volumen y complejidad técnica.";
+
+  return {pros:pros.slice(0,3),cons:cons.slice(0,2),strat};
+}
+
+// ── SEED DATA — ELITE CURATED LIST MAY 2026 ───────────────────────────────
+const SEED=[
+  {
+    company:"Global Payments",
+    title:"Vice President, Merchant Technology - LATAM",
+    url:"https://myworkdayjobs.com/GlobalPayments/job/Cuajimalpa/Vice-President--Merchant-Technology---LATAM_R0070228",
+    location:"Mexico City (Cuajimalpa)",
+    tags:["VP Level","Payments","Strategic Tech"],
+    source:"direct",
+    hm:"Chief Technology Officer (Global Payments) / Head of LATAM",
+    posted:"6 días"
+  },
+  {
+    company:"Amazon",
+    title:"Sr. Partner Manager, Payments – LATAM",
+    url:"https://amazon.jobs/en/jobs/10413517",
+    location:"Mexico City",
+    tags:["Payments","Partnerships","LATAM"],
+    source:"amazon",
+    hm:"Director of Payments LATAM (Amazon Business)",
+    posted:"5 días"
+  },
+  {
+    company:"Aircall",
+    title:"Sales Director / Enterprise Sales LATAM",
+    url:"https://www.linkedin.com/jobs/view/4241695427/",
+    location:"Mexico City (Hybrid)",
+    tags:["Sales Director","Enterprise","SaaS"],
+    source:"li",
+    hm:"VP of Sales LATAM / Head of Revenue Americas",
+    posted:"4 días"
+  },
+  {
+    company:"DEUNA",
+    title:"Enterprise Sales Executive – Payments",
+    url:"https://www.linkedin.com/jobs/view/4361105504/",
+    location:"Remote (México)",
+    tags:["Fintech","Payments","Enterprise"],
+    source:"li",
+    hm:"Head of Sales Mexico / CEO (DEUNA)",
+    posted:"Activa"
+  },
+  {
+    company:"Odoo",
+    title:"Remote Account Executive – LATAM Partnerships",
+    url:"https://www.linkedin.com/jobs/search/?keywords=Odoo+Partnerships+LATAM",
+    location:"Remote / Americas",
+    tags:["Partnerships","SaaS","Remote"],
+    source:"li",
+    hm:"Partnerships Director LATAM",
+    posted:"Ayer"
+  },
+  {
+    company:"Yuno",
+    title:"Partnerships Manager – LATAM",
+    url:"https://www.linkedin.com/jobs/view/4351333333/",
+    location:"Remote / México",
+    tags:["Fintech","Orchestration","Partnerships"],
+    source:"li",
+    hm:"Head of Partnerships (Yuno) / Head of BD LATAM",
+    posted:"3 días"
+  },
+  {
+    company:"Binance",
+    title:"Business Development – Payment (LATAM)",
+    url:"https://www.linkedin.com/jobs/view/4330738587/",
+    location:"Remote / LATAM",
+    tags:["BD","Payments","Crypto"],
+    source:"li",
+    hm:"Head of Institutional Payments LATAM",
+    posted:"Reciente"
+  },
+  {
+    company:"Koin",
+    title:"Sales Executive Senior – Anti Fraud Solutions",
+    url:"https://www.linkedin.com/jobs/view/4363999558/",
+    location:"LATAM / Remote",
+    tags:["Anti-fraud","Fintech","Sales"],
+    source:"li",
+    hm:"Head of Anti-fraud Sales / Risk Director",
+    posted:"Reciente"
+  },
+  {
+    company:"Nuvei",
+    title:"Sr. Account Manager – Mexico",
+    url:"https://www.linkedin.com/jobs/view/4279700652/",
+    location:"México",
+    tags:["Account Manager","Payments","Fintech"],
+    source:"li",
+    hm:"Head of Account Management Mexico",
+    posted:"Reciente"
+  },
+  {
+    company:"Taptap Send",
+    title:"General Manager, LATAM",
+    url:"https://www.linkedin.com/jobs/view/4242002934/",
+    location:"Remote / LATAM",
+    tags:["C-Level","GM","Fintech"],
+    source:"li",
+    hm:"CEO / Global Expansion Director",
+    posted:"Verificar"
+  }
+];
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let allJobs=[];
+let tracked=JSON.parse(localStorage.getItem("tracked")||"[]");
+
+function saveTracked(){localStorage.setItem("tracked",JSON.stringify(tracked))}
+
+function toggleTrack(url){
+  if(tracked.includes(url))tracked=tracked.filter(u=>u!==url);
+  else tracked.push(url);
+  saveTracked();
+  render();
+}
+
+// ── RENDER ──────────────────────────────────────────────────────────────────
+function render(){
+  const term=document.getElementById("search").value.toLowerCase();
+  const grid=document.getElementById("grid");
+  const filtered=allJobs.filter(j=>{
+    const t=(j.company+" "+j.title+" "+(j.tags||[]).join(" ")+" "+(j.location||"")).toLowerCase();
+    return t.includes(term);
+  }).sort((a,b)=>b._score-a._score);
+
+  document.getElementById("statTotal").textContent=allJobs.length;
+  document.getElementById("statElite").textContent=allJobs.filter(j=>j._score>=9).length;
+  document.getElementById("statTracked").textContent=tracked.length;
+
+  if(!filtered.length){
+    grid.innerHTML=`<div class="empty"><div class="icon">🔍</div><p>Sin resultados para "${term}"</p></div>`;
+    return;
+  }
+
+  grid.innerHTML=filtered.map(j=>{
+    const a=analysis(j);
+    const isTracked=tracked.includes(j.url);
+    const scoreNum=j._score;
+    const isHigh=scoreNum>=9;
+    const srcLabel=j.source==="li"?"💼 LinkedIn":j.source==="amazon"?"📦 Amazon":j.source==="direct"?"🔗 Directo":"🛸 Remotive";
+    return `<div class="card${isTracked?' tracked':''}" data-url="${j.url}">
+      <div class="score${isHigh?' high':''}">${scoreNum}</div>
+      <div class="company">${j.company}</div>
+      <div class="role">${j.title}</div>
+      <div class="tags">
+        <span class="tag">📍 ${j.location||'Remote'}</span>
+        <span class="tag source-${j.source==='li'?'li':j.source==='amazon'?'li':'api'}">${srcLabel}</span>
+        <span class="tag" style="border-color:var(--gold);color:var(--gold)">📅 ${j.posted||'En Vivo'}</span>
+        ${(j.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}
+      </div>
+      <div class="analysis">
+        <div class="pro-box">
+          <div class="box-label">✅ Por qué SÍ</div>
+          <ul class="box-text">${a.pros.map(p=>`<li>${p}</li>`).join('')}</ul>
+        </div>
+        <div class="con-box">
+          <div class="box-label">⚠️ Por qué NO</div>
+          <ul class="box-text">${a.cons.map(c=>`<li>${c}</li>`).join('')}</ul>
+        </div>
+        <div class="strat-box">
+          <div class="box-label">🚀 Estrategia de Abordaje (Hiring Manager)</div>
+          <div class="box-text">
+            <b>Persona Objetivo:</b> ${j.hm || 'Recruiter de la vacante'}<br>
+            <b>Puntos de Dolor:</b> ${a.strat}
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <a href="${j.url}" target="_blank" rel="noreferrer" class="apply">Ver Detalles & Aplicar →</a>
+        <button class="track-btn${isTracked?' done':''}" onclick="toggleTrack('${j.url}')">
+          ${isTracked?'✅ Guardada':'🔖 Guardar'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── LIVE SCAN ───────────────────────────────────────────────────────────────
+async function scanLive(){
+  const btn=document.getElementById("scanBtn");
+  const icon=document.getElementById("scanIcon");
+  btn.disabled=true;
+  icon.className="spin";
+  icon.textContent="⏳";
+  document.getElementById("statSource").textContent="🛰️ Escaneando ecosistema LATAM...";
+
+  try{
+    // Queries optimizadas para tu perfil
+    const queries=[
+      "fintech sales manager mexico",
+      "payments director latam",
+      "antifraude",
+      "risk manager payments",
+      "account executive fintech"
+    ];
+    
+    // Llamada paralela a la API de Remotive (Punto de partida)
+    const results=await Promise.allSettled(queries.map(q=>
+      fetch(`https://remotive.io/api/remote-jobs?search=${encodeURIComponent(q)}&limit=15`).then(r=>r.json())
+    ));
+
+    const fresh=[];
+    const existingUrls=new Set(SEED.map(j=>j.url));
+    
+    results.forEach(r=>{
+      if(r.status==="fulfilled"&&r.value.jobs){
+        r.value.jobs.forEach(j=>{
+          if(!existingUrls.has(j.url)){
+            fresh.push({
+              company:j.company_name,
+              title:j.title,
+              url:j.url,
+              location:j.candidate_required_location || "Remote",
+              tags:j.tags || [],
+              source:"api",
+              posted: "Recién detectada"
+            });
+            existingUrls.add(j.url);
+          }
+        });
+      }
+    });
+    allJobs=[...SEED,...fresh].map(j=>({...j,_score:parseFloat(score(j))})).sort((a,b)=>b._score-a._score);
+    document.getElementById("statSource").textContent=`✅ Live · ${fresh.length} nuevas`;
+  }catch(e){
+    document.getElementById("statSource").textContent="⚠️ Curado solo";
+  }finally{
+    btn.disabled=false;
+    icon.className="";
+    icon.textContent="🔄";
+    render();
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+document.getElementById("search").addEventListener("input",render);
+allJobs=SEED.map(j=>({...j,_score:parseFloat(score(j))})).sort((a,b)=>b._score-a._score);
+render();
+scanLive();
+</script>
+</body>
 </html>
